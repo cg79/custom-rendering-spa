@@ -1,0 +1,106 @@
+<html>
+
+<head>
+	<script src="claurenderer.js"></script>
+</head>
+
+<body>
+	<div>
+		<div id='a'>
+			<button id='btna'>Click</button>
+			<button id='btnb'>Click</button>
+
+			<button id='btnInsHtml'>Insert html</button>
+
+			<button id='btnInsNewElement'>Insert new Element</button>
+		</div>
+	</div>
+</body>
+
+
+<script type="text/javascript">
+
+	guid = () => {
+		const S4 = function () {
+			return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+		}
+
+		return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0, 3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+	}
+
+	const mydata = {
+		id: 'xxx',
+		id1: 'yyy',
+		btnFunc: (val, v2) => {
+			debugger;
+			console.log(val);
+		},
+		list: [{ id: '1a', name: 'john' }, { id: '2a', name: 'ionela' }],
+		text: "hello dinamic button"
+	};
+	for (var i = 0; i < 10; i++) {
+		mydata.list.push({
+			id: i,
+			name: (new Date()).toString()
+		});
+	}
+
+	const itemTemplate = `
+				<div class="{id}" id="id{id}"">
+					<label>{name}</label>
+					<button id="{id}btn"> sterge{name}</button>
+				</div>
+			`;
+	const renderer = new Rendered();
+
+	renderer.assignEv('btnInsHtml', 'click', (el, id) => {
+		document.getElementById('a').insertAdjacentHTML('beforeend', '<label>asdasd</label>');
+
+		renderer.insertElement('a', '<label id={id}>asdasd</label>', mydata);
+
+		renderer.insertElement('a', `<button id="{id}" onClick="mydata.btnFunc('{id}', '{id}')">{text}</button>`, mydata);
+
+		//de aici in colo e interesant
+		renderer.insertElement('a', `<button id="{id1}">{text}</button>`, mydata)
+			.assignEv(mydata.id1, 'click', (el, id) => {
+				debugger;
+			});
+
+		mydata.list.forEach(listEl => {
+			renderer.insertElement('a', itemTemplate, listEl)
+				.assignEv(`${listEl.id}btn`, 'click', (el, id) => {
+					debugger;
+					renderer.removeElement(`id${listEl.id}`);
+				})
+				.assignEv(`${listEl.id}btn`, 'mouseover', (el, id) => {
+					console.log('mouse over ', id);
+				})
+		})
+
+	})
+
+
+	renderer.assignEv('btnInsNewElement', 'click', (el, id) => {
+		const elementInfo = {
+			id: guid(),
+			name: (new Date()).toString()
+		};
+
+		renderer.insertElement('a', itemTemplate, elementInfo)
+		.assignEv(`${elementInfo.id}btn`, 'click', (el, id) => {
+					debugger;
+					renderer.removeElement(`id${elementInfo.id}`);
+				})
+				.assignEv(`${elementInfo.id}btn`, 'mouseover', (el, id) => {
+					console.log('mouse over ', id);
+				})
+	});
+
+
+
+
+
+
+</script>
+
+</html>
