@@ -1,0 +1,9 @@
+.idea
+.nyc_output
+*.iml
+node_modules/
+lib
+coverage
+dist
+tests/smoke/release
+

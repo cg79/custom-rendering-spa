@@ -87,13 +87,23 @@
 		};
 
 		renderer.insertElement('a', itemTemplate, elementInfo)
-		.assignEv(`${elementInfo.id}btn`, 'click', (el, id) => {
+				.assignEv(`${elementInfo.id}btn`, 'click', (el, id) => {
 					debugger;
 					renderer.removeElement(`id${elementInfo.id}`);
 				})
 				.assignEv(`${elementInfo.id}btn`, 'mouseover', (el, id) => {
 					console.log('mouse over ', id);
 				})
+				.assignEv(`id${elementInfo.id}`, 'mouseover', (el, id) => {
+					console.log('mouse over ', id);
+					elementInfo.over = true;
+				})
+				.assignEv(`id${elementInfo.id}`, 'mouseleave', (el, id) => {
+					console.log('mouse over ', id);
+					elementInfo.over = false;
+				})
+				.mapClass(`id${elementInfo.id}`, 'over')
+
 	});
 
 
