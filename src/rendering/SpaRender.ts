@@ -1,10 +1,13 @@
 
-class SpaRender {
+export class SpaRender {
 
     data = null;
 
     textToHtmlText = ( text, data ) => {
         const props = text.match( /(\{)(.*?)(\})/gi );
+        if(!props) {
+            return text;
+        }
         var pName = '';
         props.forEach( p => {
             pName = p.replace( '{', '' ).replace( '}', '' );
@@ -14,12 +17,22 @@ class SpaRender {
         return text;
     }
 
-    insertElement = ( parentId, text, data ) => {
+    insertElement = ( parentId: string, template: string, data:any ): Node | null => {
         this.data = data;
-        const htmlText = this.textToHtmlText( text, data );
+        const htmlText = this.textToHtmlText( template, data );
+        
+        const parent = document.getElementById( parentId );
+        if(!parent) {
+            console.warn('no parent for ', parentId);
+            return null;
+        }
+         parent.insertAdjacentHTML( 'beforeend', htmlText );
 
-        document.getElementById( parentId ).insertAdjacentHTML( 'beforeend', htmlText );
-        return this;
+         const lastChild = parent.lastChild;
+         if(!lastChild) {
+             return null;
+         }
+        return lastChild.previousSibling;
     }
     removeElement ( id ) {
         const htmlElement = document.getElementById( id );
@@ -39,6 +52,25 @@ class SpaRender {
         htmlElement.addEventListener( evName, ( element ) => {
             exec( element );
         } )
+        return this;
+    }
+
+    assignChildNodeEv = ( childNode:Node, evName: string, func: Function ) => {
+        let htmlElement = null;
+        const exec = ( el ) => { debugger; func( el ) };
+        // htmlElement = document.getElementById( id );
+        // if ( !htmlElement ) {
+        //     throw new Error( `no html element for ${ id }` );
+        // }
+        childNode.addEventListener( evName, ( element ) => {
+            debugger;
+            exec( element );
+        } );
+
+        childNode[evName] = (el) => {
+            debugger;
+            exec(el);
+        };
         return this;
     }
     mapClass = ( id, orig, propName ) => {

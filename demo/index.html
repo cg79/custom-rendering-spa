@@ -1,7 +1,7 @@
 <html>
 
 <head>
-	<script src="dist/spalib.js"></script>
+	<script src="../dist/spalib.js"></script>
 </head>
 
 <body>
@@ -39,9 +39,27 @@
 		text: "hello dinamic button"
 	};
 
-	var x = spalib.component().model(mydata).render();
+	const home = spalib.components['home'];
+	home.render();
 
-	console.log(x);
+	// var x = spalib.component()
+	// 	.template(
+	// 		`
+	// 			<span>{id1}</span>
+	// 		`)
+	// 	.model(mydata).render();
+
+
+	// var y = spalib.component()
+	// 	.template(
+	// 		`
+	// 			<button>{id1}</button>
+	// 		`)
+	// 	.model(mydata)
+	// 	.event()
+	// 	.render();
+
+	// console.log(x);
 
 </script>
 

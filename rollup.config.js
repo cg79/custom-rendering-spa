@@ -28,8 +28,7 @@ const paramsToJson = (parameters) => {
     return obj
 }
 
-let outputPath = './tests/smoke/release/stg1/';
-let configFilePath = './config/stage';
+let outputPath = './build';
 let commandLineParams = {};
 
 /**
@@ -62,22 +61,6 @@ const processCommandLineParameters = () => {
         if (!commandLineParams) {
             commandLineParams = {};
         }
-        if (!commandLineParams.env) {
-            commandLineParams.env = 'stg';
-        }
-
-        switch (commandLineParams.env) {
-            case 'qa': {
-                outputPath = './tests/smoke/release/qa/';
-                configFilePath = './config/qa';
-                break;
-            }
-            case 'prod': {
-                outputPath = './tests/smoke/release/prod/';
-                configFilePath = './config/prod';
-                break;
-            }
-        }
     }
     catch (e) {
         console.log(e);
@@ -85,8 +68,6 @@ const processCommandLineParameters = () => {
 }
 
 processCommandLineParameters();
-
-const variables = require(configFilePath);
 
 const plugins = [
     rollupNodeResolve({ jsnext: true, preferBuiltins: true, browser: true }),
@@ -99,16 +80,9 @@ const plugins = [
     }),
    
     buble(),
-    replace({
-        exclude: 'node_modules/**',
-        __tracking_enabled: variables.methodTrackingEnabled,
-        __analytics_enabled: variables.analytics.enabled,
-        __sha: JSON.stringify(variables.sha),
-        __version: JSON.stringify(variables.version),
-        __log_enabled: variables.log.enabled,
-        __baseUrlAdobe: JSON.stringify(variables.baseUrlAdobe),
-        __baseUrlServices: JSON.stringify(variables.baseUrlServices)
-    }),
+    // replace({
+    //     exclude: 'node_modules/**'
+    // }),
 
     commonjs({
         namedExports: {
@@ -135,7 +109,7 @@ plugins.push(copy({
     hook: 'writeBundle',
     copyOnce: false,
     targets: [
-        { src: 'dist/imslib.js', dest: outputPath }
+        { src: 'dist/spalib.js', dest: outputPath }
     ]
 }));
 
@@ -143,9 +117,10 @@ plugins.push(copy({
  * Default/development Build
  */
 const config = {
-    input: 'src/Main.ts',
+    // input: 'src/SpaLib.ts',
+    input: 'app/modules/home/HomeModule.ts',
     output: {
-        file: './dist/imslib.js',
+        file: './dist/spalib.js',
         format: "iife",
         name: "roll"
     },

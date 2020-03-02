@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "backend for vanila project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "set NODE_ENV=dev && node -r dotenv/config ./index.js",
+    "dev": "set NODE_ENV=dev && nodemon -r dotenv/config ./index.js "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@gitlab.softvision.ro:rares.pop/javascriptworkshoptraining.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "koa": "^2.11.0",
+    "koa-body": "^4.1.1",
+    "koa-cors": "0.0.16",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^7.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.0"
+  }
+}
