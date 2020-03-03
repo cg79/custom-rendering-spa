@@ -9,44 +9,34 @@ export class MobxService {
   state;
   component;
 
-  constructor (component, objName) {
-    this.component = component;
-
-    this.object = component[objName];
-    const { observables, proxy } = observe(this.object);
+  asObservable(obj) {
+    const { observables, proxy } = observe( obj );
 
     this._proxy = proxy;
     this._observables = observables;
 
-    component[objName] = proxy;
-    return this;
-  }
-
-  subscribe(listOfProperties, onAfterRendered) {
+    this.object = proxy;
     
-    const props = listOfProperties.replace(/ +/, '').split(',');
-    props.forEach(prop => {
-      const obsProp = this._observables[prop];
-      if (obsProp) {
-        this.seeChanges(prop, obsProp, onAfterRendered);
+    return proxy;
+  }
+  
+  subscribe ( property: string, valueChangedEvent: Function ) {
+
+    // const props = listOfProperties.replace( / +/, '' ).split( ',' );
+    // props.forEach( (prop: string) => {
+      const obsProp = this._observables[ property ];
+      if ( obsProp ) {
+        obsProp.subscribe( ( value: any ) => {
+          // this.object[prop] = value;
+          debugger;
+          console.log( value );
+          valueChangedEvent(value);
+    
+        })
       }
-    })
+    // } )
 
     return this;
-  }
-
-  seeChanges(prop, obsProp, onAfterRendered) {
-    this.object[prop] = obsProp;
-    obsProp.subscribe((value) => {
-      this.object[prop] = value;
-      console.log(value);
-
-      this.component && this.component.setState(
-        { 
-          a: new Date() 
-        },onAfterRendered
-        );
-    });
   }
 
 }

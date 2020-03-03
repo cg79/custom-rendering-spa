@@ -19,7 +19,7 @@ export class SpaRender {
 
     insertElement = ( parentId: string, template: string, data:any ): Node | null => {
         this.data = data;
-        const htmlText = this.textToHtmlText( template, data );
+        const htmlText = data ?  this.textToHtmlText( template, data ) : template;
         
         const parent = document.getElementById( parentId );
         if(!parent) {
@@ -57,18 +57,16 @@ export class SpaRender {
 
     assignChildNodeEv = ( childNode:Node, evName: string, func: Function ) => {
         let htmlElement = null;
-        const exec = ( el ) => { debugger; func( el ) };
+        const exec = ( el ) => { func( el ) };
         // htmlElement = document.getElementById( id );
         // if ( !htmlElement ) {
         //     throw new Error( `no html element for ${ id }` );
         // }
         childNode.addEventListener( evName, ( element ) => {
-            debugger;
             exec( element );
         } );
 
         childNode[evName] = (el) => {
-            debugger;
             exec(el);
         };
         return this;
