@@ -3,19 +3,14 @@ import { IComponentEvent } from "./events/IComponentEvent";
 import { IEventType } from "./events/IEventType";
 import { BaseSpaComponent } from "./BaseSpaComponent";
 import { SpaComponent } from "./SpaComponent";
+import { BaseSpaComposedComponent } from "./BaseSpaComposedComponent";
 
-// class TestTwo<T extends TestBase> {
-//     constructor(private testType: new () => T) {
-//     }
+export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends BaseSpaComponent {
+    render (): void {
+        throw new Error( "Method not implemented." );
+    }
 
-//     getNew() : T {
-//         return new this.testType();
-//     }
-// }
-
-export class SpaRepeaterComponent<T extends BaseSpaComponent> extends BaseSpaComponent {
-
-    aaa = [];
+    private nodes = {};
     constructor ( private testType: new () => T ) {
         super();
     }
@@ -24,17 +19,51 @@ export class SpaRepeaterComponent<T extends BaseSpaComponent> extends BaseSpaCom
         return new this.testType();
     }
 
+    private _parentNode: Node | null = null;
     setModel( list: Array<any> ) {
         if ( !list ) {
             return;
         }
+        this._parentNode = this.spaRenderer.insertHtml('a', 
+			`
+			<div class="todoContainer">
+			</div>
+			`);
+    
         let comp = null;
         list.forEach( el => {
+
+            const containerItemNode = this.spaRenderer.addHmlChild(this._parentNode, 
+			`
+			<div class="todorow" id="todolist">
+			</div>
+            `);
+            
             comp = this.getNew();
-            comp.handlers(this._handlers).cssFile(this._cssFile)
-            .model(el);
-            // comp.render();
-            // this.aaa.push( comp );
+            
+            const node = comp.handlers(this._handlers).cssFile(this._cssFile)
+            .parentNode(containerItemNode)
+            .model(el)
+            .triggerRender();
+
+            this.nodes[el.id] = node;
         } );
+    }
+
+    _parentTemplate = '';
+    parentTemplate(template: string) {
+        this._parentTemplate= template
+        return this;
+    }
+    remove(key: string) {
+        const node: Node = this.nodes[key] as Node;
+        if(!node) {
+            return;
+        }
+        if(!this._parentNode) {
+            return;
+        }
+
+        this._parentNode.removeChild(node);
     }
 }

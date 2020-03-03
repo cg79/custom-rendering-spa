@@ -4,8 +4,8 @@ import { IEventType } from "./events/IEventType";
 import { BaseSpaComponent } from "./BaseSpaComponent";
 
 export class SpaComponent  extends BaseSpaComponent {
-    render (): void {
-        this.render1();
+    render (): Node | null {
+        return this.render1();
         // const {events, spaRenderer} = this;
         // const node =  spaRenderer.insertElement('a',this._template, this._model);
         // if(!node) {

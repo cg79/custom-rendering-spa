@@ -17,9 +17,56 @@ export class SpaRender {
         return text;
     }
 
+    getHtml(template: string, data:any) : string {
+        return  data ?  this.textToHtmlText( template, data ) : template;
+    }
+
+    insertHtml = ( parentId: string, html: string ): Node | null => {
+        
+        const parent = document.getElementById( parentId );
+        if(!parent) {
+            console.warn('no parent for ', parentId);
+            return null;
+        }
+         parent.insertAdjacentHTML( 'beforeend', html );
+
+         const lastChild = parent.lastChild;
+         if(!lastChild) {
+             return null;
+         }
+        return lastChild.previousSibling;
+    }
+
+    addHmlChild = ( node: Node | null, htmlText: string ): Node | null => {
+        
+        if(!node) {
+            throw new Error('no node parent');
+        }
+         node.insertAdjacentHTML( 'beforeend', htmlText );
+
+         const lastChild = node.lastChild;
+         if(!lastChild) {
+             return null;
+         }
+        return lastChild.previousSibling;
+    }
+
+    addChild = ( node: Node, template: string, data:any ): Node | null => {
+        this.data = data;
+        const htmlText = this.getHtml(template, data);
+        
+         node.insertAdjacentHTML( 'beforeend', htmlText );
+
+         const lastChild = node.lastChild;
+         if(!lastChild) {
+             return null;
+         }
+        return lastChild.previousSibling;
+    }
+
     insertElement = ( parentId: string, template: string, data:any ): Node | null => {
         this.data = data;
-        const htmlText = data ?  this.textToHtmlText( template, data ) : template;
+        const htmlText = this.getHtml(template, data);
         
         const parent = document.getElementById( parentId );
         if(!parent) {

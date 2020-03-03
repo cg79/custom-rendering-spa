@@ -17,11 +17,32 @@ export abstract class BaseSpaComponent {
 
     protected _cssFile = ''
 
+    protected _parentId = '';
+
     protected _handlers = {};
+
+    protected _parentNode: Node | null = null;
     constructor () {
         this.spaRenderer = new SpaRender();
     }
+    
+    protected guid = () => {
+		const S4 = function () {
+			return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+		}
 
+		return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0, 3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+    }
+    
+    parentId(parentIdValue: string) {
+        this._parentId = parentIdValue;
+        return this;
+    }
+
+    parentNode(node: Node | null) {
+        this._parentNode = node;
+        return this;
+    }
     cssFile ( cssFilePath: string ) {
         this._cssFile = cssFilePath;
         return this;
@@ -39,7 +60,7 @@ export abstract class BaseSpaComponent {
 
     model ( state: any ) {
         this._model = state;
-        this.render();
+        // this.render();
         return this;
     }
 
@@ -82,25 +103,41 @@ export abstract class BaseSpaComponent {
         head.append( style );
 
     }
-
-    protected render1 () {
-        const { events, spaRenderer } = this;
-        const node = spaRenderer.insertElement( 'a', this._template, this._model );
-        if ( !node ) {
-            return;
-        }
-
-        this.node = node;
-
+    getHtml(): string {
         this.insertCssFile();
+        return this.spaRenderer.getHtml(this._template, this._model);
+    }
 
+    protected assignEvents(node: Node) {
+        const { events, spaRenderer } = this;
         let func = null;
         Object.keys( events ).forEach( ev => {
             func = events[ ev as IComponentEvent ] as Function;
             spaRenderer.assignChildNodeEv( node, ev, func );
         } );
 
-        return this;
+    }
+    
+    protected render1 (): Node | null {
+        const { spaRenderer } = this;
+        let node = null;
+        if(this._parentNode) {
+            node = spaRenderer.addChild(this._parentNode, this._template, this._model)
+        } else {
+            node = spaRenderer.insertElement('a', this._template, this._model)
+        }
+        
+        if ( !node ) {
+            return null;
+        }
+
+        this.node = node;
+
+        this.insertCssFile();
+
+        this.assignEvents(node);
+
+        return node;
     }
 
 }

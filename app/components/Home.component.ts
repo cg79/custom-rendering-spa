@@ -24,35 +24,42 @@ export class HomeComponent extends BaseSpaComponent {
 		},
 		list: [ { id: '1a', name: 'john' }, { id: '2a', name: 'ionela' } ],
 		text: "hello dinamic button",
+		name: 'test 2 way binding',
 		shownewtodoform: false
 	};
 
 	render () {
-
+		debugger;
+		for ( var i = 0; i < 10; i++ ) {
+			this.mydata.list.push( {
+				id: this.guid(),
+				name: this.guid()
+			} );
+		}
 		var y = SpaLib.component();
-			y.template(
-				`
+		y.template(
+			`
 			<input type="text">
 			`)
 			.event( IComponentEvent.mouseover, this.mydata.mover )
 			.model( this.mydata )
-			
-			// .render();
+
+			.render();
 
 		var z = SpaLib.component();
-			z.template(
-				`
+		z.template(
+			`
 			<input type="text">
 			`)
 			.model( this.mydata )
-			// .render();
+			.render();
 
 		var x = SpaLib.component();
-			x.template(
-				`
+		x.template(
+			`
 				<button>{id1}</button>
 			`)
-			
+
 			.event( IComponentEvent.click, ( ev ) => {
 				var v1 = y.asInt();
 				var v2 = z.asInt();
@@ -66,55 +73,69 @@ export class HomeComponent extends BaseSpaComponent {
 
 			} )
 			.model( this.mydata )
-			// .render();
+			.render();
 
-			debugger;
-			new SpaRepeaterComponent<ToDoItem>(ToDoItem)
-			.cssFile('../app/components/ToDoItem.css')
-			.handlers({
-				ondelete: (v) => {
-					debugger;
-				}
-
-			})
-			.setModel(this.mydata.list)
-		
-			SpaLib.component()
-			.template(
-				`
-				<button>new todo</button>
-			`)
-			.event( IComponentEvent.click, () => this.mydata.shownewtodoform = true )
-			.model( this.mydata )
-			// .render();
-		
-		var total = SpaLib.component();
+			var total = SpaLib.component();
 			total.template(
 				`
 			<input type="text">
 			`)
 			.event( IComponentEvent.mouseover, this.mydata.mover )
 			.model( this.mydata )
-			// .render();
+			.render();
 		
+			var twoWayBinding = SpaLib.component();
+			twoWayBinding.template(
+			`
+			<div class="todo1">
+					<input id={id} type="text" value={name}>
+				</div>
+			`)
+			.model( this.mydata )
+			.render();
+
+		debugger;
+		const repeater = new SpaRepeaterComponent<ToDoItem>( ToDoItem )
+		repeater.cssFile( '../app/components/ToDoItem.css' )
+			.handlers( {
+				ondelete: ( v ) => {
+					debugger;
+					const newModel = this.mydata.list.filter( el => el.id !== v.id );
+					this.mydata.list = newModel;
+					// repeater.setModel(newModel)
+					repeater.remove( v.id );
+				}
+
+			} )
+			.setModel( this.mydata.list )
+
+		SpaLib.component()
+			.template(
+				`
+				<button>new todo</button>
+			`)
+			.event( IComponentEvent.click, () => this.mydata.shownewtodoform = true )
+			.model( this.mydata )
+		// .render();
+
 		const mService = new MobxService();
 		this.mydata = mService.asObservable( this.mydata );
 		mService.subscribe( 'v3', ( v ) => {
 			console.log( v );
 			debugger;
 		} )
-		.subscribe("shownewtodoform", (newv, oldv) => {
-			debugger;
-			if(newv) {
-				var newtodof =  SpaLib.component();
-				newtodof.template(
-				`
+			.subscribe( "shownewtodoform", ( newv, oldv ) => {
+				debugger;
+				if ( newv ) {
+					var newtodof = SpaLib.component();
+					newtodof.template(
+						`
 					<input type="text">
 					<button id='savetodo'>new todo</button>
 				`)
-			.render();
-			}
-		})
+						.render();
+				}
+			} )
 
 	}
 }
