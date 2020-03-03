@@ -32,7 +32,7 @@ export class ListComponent extends SpaComponent {
 			<input type="text">
 			`)
 			.model( this.mydata )
-			.event( IComponentEvent.mouseover, this.mydata.mover )
+			.event( IComponentEvent.onmouseover, this.mydata.mover )
 			.render();
 
 		var z = SpaLib.component()
@@ -49,7 +49,7 @@ export class ListComponent extends SpaComponent {
 				<button>{id1}</button>
 			`)
 			.model( this.mydata )
-			.event( IComponentEvent.click, ( ev ) => {
+			.event( IComponentEvent.onclick, ( ev ) => {
 				var v1 = y.asInt();
 				var v2 = z.asInt();
 
@@ -69,7 +69,7 @@ export class ListComponent extends SpaComponent {
 			<input type="text">
 			`)
 			.model( this.mydata )
-			.event( IComponentEvent.mouseover, this.mydata.mover )
+			.event( IComponentEvent.onmouseover, this.mydata.mover )
 			.render();
 
 		// var repeater = new SpaRepeaterComponent<>	

@@ -30,340 +30,6 @@ var roll = (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
-    var SpaRender = /** @class */ (function () {
-        function SpaRender() {
-            var _this = this;
-            this.data = null;
-            this.textToHtmlText = function (text, data) {
-                var props = text.match(/(\{)(.*?)(\})/gi);
-                if (!props) {
-                    return text;
-                }
-                var pName = '';
-                props.forEach(function (p) {
-                    pName = p.replace('{', '').replace('}', '');
-                    text = text.replace(p, data[pName]);
-                });
-                return text;
-            };
-            this.insertHtml = function (parentId, html) {
-                var parent = document.getElementById(parentId);
-                if (!parent) {
-                    console.warn('no parent for ', parentId);
-                    return null;
-                }
-                parent.insertAdjacentHTML('beforeend', html);
-                var lastChild = parent.lastChild;
-                if (!lastChild) {
-                    return null;
-                }
-                return lastChild.previousSibling;
-            };
-            this.addHmlChild = function (node, htmlText) {
-                if (!node) {
-                    throw new Error('no node parent');
-                }
-                node.insertAdjacentHTML('beforeend', htmlText);
-                var lastChild = node.lastChild;
-                if (!lastChild) {
-                    return null;
-                }
-                return lastChild.previousSibling;
-            };
-            this.addChild = function (node, template, data) {
-                _this.data = data;
-                var htmlText = _this.getHtml(template, data);
-                node.insertAdjacentHTML('beforeend', htmlText);
-                var lastChild = node.lastChild;
-                if (!lastChild) {
-                    return null;
-                }
-                return lastChild.previousSibling;
-            };
-            this.insertElement = function (parentId, template, data) {
-                _this.data = data;
-                var htmlText = _this.getHtml(template, data);
-                var parent = document.getElementById(parentId);
-                if (!parent) {
-                    console.warn('no parent for ', parentId);
-                    return null;
-                }
-                parent.insertAdjacentHTML('beforeend', htmlText);
-                var lastChild = parent.lastChild;
-                if (!lastChild) {
-                    return null;
-                }
-                return lastChild.previousSibling;
-            };
-            this.assignEv = function (id, evName, func) {
-                var htmlElement = null;
-                var exec = function (el) { return func(el, id); };
-                htmlElement = document.getElementById(id);
-                if (!htmlElement) {
-                    throw new Error("no html element for " + id);
-                }
-                htmlElement.addEventListener(evName, function (element) {
-                    exec(element);
-                });
-                return _this;
-            };
-            this.assignChildNodeEv = function (childNode, evName, func) {
-                var exec = function (el) { func(el); };
-                // htmlElement = document.getElementById( id );
-                // if ( !htmlElement ) {
-                //     throw new Error( `no html element for ${ id }` );
-                // }
-                childNode.addEventListener(evName, function (element) {
-                    exec(element);
-                });
-                childNode[evName] = function (el) {
-                    exec(el);
-                };
-                return _this;
-            };
-            this.mapClass = function (id, orig, propName) {
-                var htmlElement = null;
-                htmlElement = document.getElementById(id);
-                if (!htmlElement) {
-                    throw new Error("no html element for " + id);
-                }
-                htmlElement.setAttribute("class", orig + " " + _this.data[propName]);
-                return _this;
-            };
-        }
-        SpaRender.prototype.getHtml = function (template, data) {
-            return data ? this.textToHtmlText(template, data) : template;
-        };
-        SpaRender.prototype.removeElement = function (id) {
-            var htmlElement = document.getElementById(id);
-            if (!htmlElement) {
-                throw new Error("no html element for " + id);
-            }
-            return htmlElement.parentNode.removeChild(htmlElement);
-        };
-        return SpaRender;
-    }());
-
-    var BaseSpaComponent = /** @class */ (function () {
-        function BaseSpaComponent() {
-            this._template = '';
-            this.node = null;
-            this.events = {};
-            this._cssFile = '';
-            this._parentId = '';
-            this._handlers = {};
-            this._parentNode = null;
-            this.guid = function () {
-                var S4 = function () {
-                    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-                };
-                return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0, 3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
-            };
-            this.spaRenderer = new SpaRender();
-        }
-        BaseSpaComponent.prototype.parentId = function (parentIdValue) {
-            this._parentId = parentIdValue;
-            return this;
-        };
-        BaseSpaComponent.prototype.parentNode = function (node) {
-            this._parentNode = node;
-            return this;
-        };
-        BaseSpaComponent.prototype.cssFile = function (cssFilePath) {
-            this._cssFile = cssFilePath;
-            return this;
-        };
-        BaseSpaComponent.prototype.event = function (eventName, func) {
-            this.events[eventName] = func;
-            return this;
-        };
-        BaseSpaComponent.prototype.handlers = function (val) {
-            if (val === void 0) { val = {}; }
-            this._handlers = val;
-            return this;
-        };
-        BaseSpaComponent.prototype.model = function (state) {
-            this._model = state;
-            // this.render();
-            return this;
-        };
-        BaseSpaComponent.prototype.template = function (template) {
-            this._template = template;
-            return this;
-        };
-        BaseSpaComponent.prototype.setValue = function (val) {
-            if (!this.node) {
-                return;
-            }
-            this.node['value'] = val;
-        };
-        BaseSpaComponent.prototype.getValue = function () {
-            if (!this.node) {
-                return null;
-            }
-            return this.node['value'];
-        };
-        BaseSpaComponent.prototype.asInt = function () {
-            var v = this.getValue();
-            return v ? parseInt(v) : 0;
-        };
-        BaseSpaComponent.prototype.insertCssFile = function () {
-            if (!this._cssFile) {
-                return;
-            }
-            debugger;
-            var head = document.getElementsByTagName('head')[0];
-            var style = document.createElement('link');
-            style.href = this._cssFile;
-            style.type = 'text/css';
-            style.rel = 'stylesheet';
-            head.append(style);
-        };
-        BaseSpaComponent.prototype.getHtml = function () {
-            this.insertCssFile();
-            return this.spaRenderer.getHtml(this._template, this._model);
-        };
-        BaseSpaComponent.prototype.assignEvents = function (node) {
-            var _a = this, events = _a.events, spaRenderer = _a.spaRenderer;
-            var func = null;
-            Object.keys(events).forEach(function (ev) {
-                func = events[ev];
-                spaRenderer.assignChildNodeEv(node, ev, func);
-            });
-        };
-        BaseSpaComponent.prototype.render1 = function () {
-            var spaRenderer = this.spaRenderer;
-            var node = null;
-            if (this._parentNode) {
-                node = spaRenderer.addChild(this._parentNode, this._template, this._model);
-            }
-            else {
-                node = spaRenderer.insertElement('a', this._template, this._model);
-            }
-            if (!node) {
-                return null;
-            }
-            this.node = node;
-            this.insertCssFile();
-            this.assignEvents(node);
-            return node;
-        };
-        return BaseSpaComponent;
-    }());
-
-    var SpaComponent = /** @class */ (function (_super) {
-        __extends(SpaComponent, _super);
-        function SpaComponent() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SpaComponent.prototype.render = function () {
-            return this.render1();
-            // const {events, spaRenderer} = this;
-            // const node =  spaRenderer.insertElement('a',this._template, this._model);
-            // if(!node) {
-            //     return;
-            // }
-            // this.node = node;
-            // let func = null;
-            // Object.keys(events).forEach(ev => {
-            //     func = events[ev as IComponentEvent] as Function;
-            //     spaRenderer.assignChildNodeEv(node, ev, func);
-            // });
-        };
-        return SpaComponent;
-    }(BaseSpaComponent));
-
-    // import { SpaLabel } from './components/SpaLabel';
-    var SpaView = /** @class */ (function () {
-        function SpaView(model) {
-            this.model = model;
-            // this.renderer = new SpaRender();
-        }
-        SpaView.prototype.render = function () {
-            return "j";
-        };
-        return SpaView;
-    }());
-
-    var SpaLib = /** @class */ (function () {
-        function SpaLib() {
-            this.components = {};
-            window['spalib'] = this;
-            // this.page = new SpaPage();
-            this.spaRenderer = new SpaRender();
-        }
-        SpaLib.prototype.includeView = function () {
-            return new SpaView({});
-        };
-        SpaLib.prototype.component = function () {
-            return new SpaComponent();
-        };
-        SpaLib.prototype.addComponent = function (name, component) {
-            this.components[name] = component;
-        };
-        return SpaLib;
-    }());
-    var SpaLib$1 = new SpaLib();
-
-    var BaseSpaComposedComponent = /** @class */ (function (_super) {
-        __extends(BaseSpaComposedComponent, _super);
-        function BaseSpaComposedComponent() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        BaseSpaComposedComponent.prototype.model = function (state) {
-            this._model = state;
-            return this;
-        };
-        return BaseSpaComposedComponent;
-    }(BaseSpaComponent));
-
-    var IComponentEvent;
-    (function (IComponentEvent) {
-        IComponentEvent["click"] = "onclick";
-        IComponentEvent["mouseover"] = "onmouseover";
-        IComponentEvent["mouseenter"] = "mouseenter";
-        IComponentEvent["mouseleave"] = "mouseleave";
-    })(IComponentEvent || (IComponentEvent = {}));
-
-    var ToDoItem = /** @class */ (function (_super) {
-        __extends(ToDoItem, _super);
-        function ToDoItem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._html = '';
-            return _this;
-        }
-        ToDoItem.prototype.render = function () {
-            // const node = this.spaRenderer.insertHtml('a', this._html);
-            debugger;
-        };
-        ToDoItem.prototype.triggerRender = function () {
-            var _this = this;
-            debugger;
-            var y = SpaLib$1.component();
-            var h1Node = y.template("\n\t\t\t\n\t\t\t\t<div class=\"todo\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t</div>\n\t\t\t")
-                .cssFile(this._cssFile)
-                .parentNode(this._parentNode)
-                .model(this._model)
-                .render();
-            var x = SpaLib$1.component();
-            var h2Node = x.template("\n\t\t\t\t<button>{id}</button>\n\t\t\t\t</div>\n\t\t\t")
-                .handlers(this._handlers)
-                .parentNode(this._parentNode)
-                .event(IComponentEvent.click, function (ev) {
-                debugger;
-                var v1 = y.asInt();
-                console.log(v1);
-                _this._handlers['ondelete'](_this._model);
-            })
-                .model(this._model)
-                .render();
-            this._parentNode.appendChild(h1Node);
-            this._parentNode.appendChild(h2Node);
-            return this._parentNode;
-        };
-        return ToDoItem;
-    }(BaseSpaComposedComponent));
-
     /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function isFunction(x) {
         return typeof x === 'function';
@@ -1291,55 +957,374 @@ var roll = (function () {
         return MobxService;
     }());
 
-    var SpaRepeaterComponent = /** @class */ (function (_super) {
-        __extends(SpaRepeaterComponent, _super);
-        function SpaRepeaterComponent(testType) {
-            var _this = _super.call(this) || this;
-            _this.testType = testType;
-            _this.nodes = {};
-            _this._parentNode = null;
-            _this._parentTemplate = '';
-            return _this;
-        }
-        SpaRepeaterComponent.prototype.render = function () {
-            throw new Error("Method not implemented.");
-        };
-        SpaRepeaterComponent.prototype.getNew = function () {
-            return new this.testType();
-        };
-        SpaRepeaterComponent.prototype.setModel = function (list) {
+    var SpaRender = /** @class */ (function () {
+        function SpaRender() {
             var _this = this;
-            if (!list) {
-                return;
-            }
-            this._parentNode = this.spaRenderer.insertHtml('a', "\n\t\t\t<div class=\"todoContainer\">\n\t\t\t</div>\n\t\t\t");
-            var comp = null;
-            list.forEach(function (el) {
-                var containerItemNode = _this.spaRenderer.addHmlChild(_this._parentNode, "\n\t\t\t<div class=\"todorow\" id=\"todolist\">\n\t\t\t</div>\n            ");
-                comp = _this.getNew();
-                var node = comp.handlers(_this._handlers).cssFile(_this._cssFile)
-                    .parentNode(containerItemNode)
-                    .model(el)
-                    .triggerRender();
-                _this.nodes[el.id] = node;
-            });
+            this.data = null;
+            this.textToHtmlText = function (text, data) {
+                var props = text.match(/(\{)(.*?)(\})/gi);
+                if (!props) {
+                    return text;
+                }
+                var pName = '';
+                props.forEach(function (p) {
+                    pName = p.replace('{', '').replace('}', '');
+                    text = text.replace(p, data[pName]);
+                });
+                return text;
+            };
+            this.insertHtml = function (parentId, html) {
+                var parent = document.getElementById(parentId);
+                if (!parent) {
+                    console.warn('no parent for ', parentId);
+                    return null;
+                }
+                parent.insertAdjacentHTML('beforeend', html);
+                var lastChild = parent.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.addHmlChild = function (node, htmlText) {
+                if (!node) {
+                    throw new Error('no node parent');
+                }
+                node.insertAdjacentHTML('beforeend', htmlText);
+                var lastChild = node.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.addChild = function (node, template, data) {
+                _this.data = data;
+                var htmlText = _this.getHtml(template, data);
+                node.insertAdjacentHTML('beforeend', htmlText);
+                var lastChild = node.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.insertElement = function (parentId, template, data) {
+                _this.data = data;
+                var htmlText = _this.getHtml(template, data);
+                var parent = document.getElementById(parentId);
+                if (!parent) {
+                    console.warn('no parent for ', parentId);
+                    return null;
+                }
+                parent.insertAdjacentHTML('beforeend', htmlText);
+                var lastChild = parent.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.assignEv = function (id, evName, func) {
+                var htmlElement = null;
+                var exec = function (el) { return func(el, id); };
+                htmlElement = document.getElementById(id);
+                if (!htmlElement) {
+                    throw new Error("no html element for " + id);
+                }
+                htmlElement.addEventListener(evName, function (element) {
+                    exec(element);
+                });
+                return _this;
+            };
+            this.assignChildNodeEv = function (childNode, evName, func) {
+                var exec = function (el) { func(el); };
+                // htmlElement = document.getElementById( id );
+                // if ( !htmlElement ) {
+                //     throw new Error( `no html element for ${ id }` );
+                // }
+                childNode.addEventListener(evName, function (element) {
+                    exec(element);
+                });
+                childNode[evName] = function (el) {
+                    exec(el);
+                };
+                return _this;
+            };
+            this.mapClass = function (id, orig, propName) {
+                var htmlElement = null;
+                htmlElement = document.getElementById(id);
+                if (!htmlElement) {
+                    throw new Error("no html element for " + id);
+                }
+                htmlElement.setAttribute("class", orig + " " + _this.data[propName]);
+                return _this;
+            };
+        }
+        SpaRender.prototype.getHtml = function (template, data) {
+            return data ? this.textToHtmlText(template, data) : template;
         };
-        SpaRepeaterComponent.prototype.parentTemplate = function (template) {
-            this._parentTemplate = template;
+        SpaRender.prototype.removeElement = function (id) {
+            var htmlElement = document.getElementById(id);
+            if (!htmlElement) {
+                throw new Error("no html element for " + id);
+            }
+            return htmlElement.parentNode.removeChild(htmlElement);
+        };
+        return SpaRender;
+    }());
+
+    var BaseSpaComponent = /** @class */ (function () {
+        function BaseSpaComponent() {
+            this._template = '';
+            this.node = null;
+            this.events = {};
+            this._cssFile = '';
+            this._parentId = '';
+            this._handlers = {};
+            this._parentNode = null;
+            this.guid = function () {
+                var S4 = function () {
+                    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+                };
+                return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0, 3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+            };
+            this._name = '';
+            this._mobx = null;
+            this.mobxSubsribers = [];
+            this.spaRenderer = new SpaRender();
+        }
+        BaseSpaComponent.prototype.name = function (val) {
+            this._name = val;
             return this;
         };
-        SpaRepeaterComponent.prototype.remove = function (key) {
-            var node = this.nodes[key];
-            if (!node) {
-                return;
-            }
-            if (!this._parentNode) {
-                return;
-            }
-            this._parentNode.removeChild(node);
+        BaseSpaComponent.prototype.parentId = function (parentIdValue) {
+            this._parentId = parentIdValue;
+            return this;
         };
-        return SpaRepeaterComponent;
+        BaseSpaComponent.prototype.parentNode = function (node) {
+            this._parentNode = node;
+            return this;
+        };
+        BaseSpaComponent.prototype.cssFile = function (cssFilePath) {
+            this._cssFile = cssFilePath;
+            return this;
+        };
+        BaseSpaComponent.prototype.event = function (eventName, func) {
+            this.events[eventName] = func;
+            return this;
+        };
+        BaseSpaComponent.prototype.handlers = function (val) {
+            if (val === void 0) { val = {}; }
+            this._handlers = val;
+            return this;
+        };
+        BaseSpaComponent.prototype.model = function (state) {
+            this._mobx = new MobxService();
+            state = this.asObservable(state);
+            // this.render();
+            this._model = state;
+            return this;
+        };
+        BaseSpaComponent.prototype.asObservable = function (obj) {
+            var _a = observe(obj), observables = _a.observables, proxy = _a.proxy;
+            this._proxy = proxy;
+            this._observables = observables;
+            return proxy;
+        };
+        BaseSpaComponent.prototype.subscribe = function (property, valueChangedEvent) {
+            var v = {
+                property: property,
+                valueChangedEvent: valueChangedEvent,
+            };
+            this.mobxSubsribers.push(v);
+            return this;
+        };
+        BaseSpaComponent.prototype.applySubscribers = function () {
+            var _this = this;
+            var _a = this, _mobx = _a._mobx, mobxSubsribers = _a.mobxSubsribers;
+            if (!_mobx) {
+                return;
+            }
+            mobxSubsribers.forEach(function (el) {
+                var property = el.property, valueChangedEvent = el.valueChangedEvent;
+                var obsProp = _this._observables[property];
+                if (obsProp) {
+                    obsProp.subscribe(function (value) {
+                        // this.object[prop] = value;
+                        debugger;
+                        console.log(value);
+                        valueChangedEvent(value);
+                    });
+                }
+            }
+            // _mobx.subscribe( el.property, el.valueChangedEvent ) 
+            );
+            // 
+        };
+        BaseSpaComponent.prototype.template = function (template) {
+            this._template = template;
+            return this;
+        };
+        BaseSpaComponent.prototype.setValue = function (val) {
+            if (!this.node) {
+                return;
+            }
+            this.node['value'] = val;
+        };
+        BaseSpaComponent.prototype.getValue = function () {
+            if (!this.node) {
+                return null;
+            }
+            return this.node['value'];
+        };
+        BaseSpaComponent.prototype.asInt = function () {
+            var v = this.getValue();
+            return v ? parseInt(v) : 0;
+        };
+        BaseSpaComponent.prototype.setState = function (propName, value) {
+            this._model[propName] = value;
+        };
+        BaseSpaComponent.prototype.insertCssFile = function () {
+            if (!this._cssFile) {
+                return;
+            }
+            debugger;
+            var head = document.getElementsByTagName('head')[0];
+            var style = document.createElement('link');
+            style.href = this._cssFile;
+            style.type = 'text/css';
+            style.rel = 'stylesheet';
+            head.append(style);
+        };
+        BaseSpaComponent.prototype.getHtml = function () {
+            this.insertCssFile();
+            return this.spaRenderer.getHtml(this._template, this._model);
+        };
+        BaseSpaComponent.prototype.assignEvents = function (node) {
+            var _a = this, events = _a.events, spaRenderer = _a.spaRenderer;
+            var func = null;
+            Object.keys(events).forEach(function (ev) {
+                func = events[ev];
+                spaRenderer.assignChildNodeEv(node, ev, func);
+            });
+        };
+        BaseSpaComponent.prototype.render1 = function () {
+            var spaRenderer = this.spaRenderer;
+            var node = null;
+            if (this._parentNode) {
+                node = spaRenderer.addChild(this._parentNode, this._template, this._model);
+            }
+            else {
+                node = spaRenderer.insertElement('a', this._template, this._model);
+            }
+            if (!node) {
+                return null;
+            }
+            this.node = node;
+            this.insertCssFile();
+            this.assignEvents(node);
+            this.applySubscribers();
+            return node;
+        };
+        BaseSpaComponent.prototype.getEventValue = function (ev) {
+            return ev.target ? ev.target.value : null;
+        };
+        BaseSpaComponent.prototype.getEventValueAsNumber = function (ev) {
+            return ev.target ? ev.target.value : null;
+        };
+        BaseSpaComponent.prototype.getEventValueAsDate = function (ev) {
+            return ev.target ? ev.target.valueAsDate : null;
+        };
+        return BaseSpaComponent;
+    }());
+
+    var SpaComponent = /** @class */ (function (_super) {
+        __extends(SpaComponent, _super);
+        function SpaComponent() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SpaComponent.prototype.render = function () {
+            return this.render1();
+            // const {events, spaRenderer} = this;
+            // const node =  spaRenderer.insertElement('a',this._template, this._model);
+            // if(!node) {
+            //     return;
+            // }
+            // this.node = node;
+            // let func = null;
+            // Object.keys(events).forEach(ev => {
+            //     func = events[ev as IComponentEvent] as Function;
+            //     spaRenderer.assignChildNodeEv(node, ev, func);
+            // });
+        };
+        return SpaComponent;
     }(BaseSpaComponent));
+
+    // import { SpaLabel } from './components/SpaLabel';
+    var SpaView = /** @class */ (function () {
+        function SpaView(model) {
+            this.model = model;
+            // this.renderer = new SpaRender();
+        }
+        SpaView.prototype.render = function () {
+            return "j";
+        };
+        return SpaView;
+    }());
+
+    var SpaLib = /** @class */ (function () {
+        function SpaLib() {
+            this.components = {};
+            window['spalib'] = this;
+            // this.page = new SpaPage();
+            this.spaRenderer = new SpaRender();
+        }
+        SpaLib.prototype.includeView = function () {
+            return new SpaView({});
+        };
+        SpaLib.prototype.component = function () {
+            return new SpaComponent();
+        };
+        SpaLib.prototype.addComponent = function (name, component) {
+            this.components[name] = component;
+        };
+        return SpaLib;
+    }());
+    var SpaLib$1 = new SpaLib();
+
+    var IComponentEvent;
+    (function (IComponentEvent) {
+        IComponentEvent["oncopy"] = "oncopy";
+        IComponentEvent["oncut"] = "oncut";
+        IComponentEvent["onpaste"] = "onpaste";
+        IComponentEvent["onabort"] = "onabort";
+        IComponentEvent["onblur"] = "onblur";
+        IComponentEvent["oncancel"] = "oncancel";
+        IComponentEvent["oncanplay"] = "oncanplay";
+        IComponentEvent["onchange"] = "onchange";
+        IComponentEvent["onclick"] = "onclick";
+        IComponentEvent["onclose"] = "onclose";
+        IComponentEvent["ondblclick"] = "ondblclick";
+        IComponentEvent["ondrag"] = "ondrag";
+        IComponentEvent["ondragend"] = "ondragend";
+        IComponentEvent["ondragenter"] = "ondragenter";
+        IComponentEvent["ondragleave"] = "ondragleave";
+        IComponentEvent["ondragover"] = "ondragover";
+        IComponentEvent["ondragstart"] = "ondragstart";
+        IComponentEvent["ondrop"] = "ondrop";
+        IComponentEvent["onfocus"] = "onfocus";
+        IComponentEvent["onformdata"] = "onformdata";
+        IComponentEvent["oninput"] = "oninput";
+        IComponentEvent["onkeydown"] = "onkeydown";
+        IComponentEvent["onkeypress"] = "onkeypress";
+        IComponentEvent["onkeyup"] = "onkeyup";
+        IComponentEvent["onmousedown"] = "onmousedown";
+        IComponentEvent["onmouseenter"] = "onmouseenter";
+        IComponentEvent["onmouseleave"] = "onmouseleave";
+        IComponentEvent["onmousemove"] = "onmousemove";
+        IComponentEvent["onmouseout"] = "onmouseout";
+        IComponentEvent["onmouseover"] = "onmouseover";
+        IComponentEvent["onmouseup"] = "onmouseup";
+        IComponentEvent["onmousewheel"] = "onmousewheel";
+    })(IComponentEvent || (IComponentEvent = {}));
 
     var HomeComponent = /** @class */ (function (_super) {
         __extends(HomeComponent, _super);
@@ -1359,82 +1344,30 @@ var roll = (function () {
                 },
                 list: [{ id: '1a', name: 'john' }, { id: '2a', name: 'ionela' }],
                 text: "hello dinamic button",
-                name: 'test 2 way binding',
+                name: 'test binding',
                 shownewtodoform: false
             };
             return _this;
         }
         HomeComponent.prototype.render = function () {
             var _this = this;
-            debugger;
-            for (var i = 0; i < 10; i++) {
-                this.mydata.list.push({
-                    id: this.guid(),
-                    name: this.guid()
-                });
-            }
-            var y = SpaLib$1.component();
-            y.template("\n\t\t\t<input type=\"text\">\n\t\t\t")
-                .event(IComponentEvent.mouseover, this.mydata.mover)
-                .model(this.mydata)
-                .render();
-            var z = SpaLib$1.component();
-            z.template("\n\t\t\t<input type=\"text\">\n\t\t\t")
-                .model(this.mydata)
-                .render();
-            var x = SpaLib$1.component();
-            x.template("\n\t\t\t\t<button>{id1}</button>\n\t\t\t")
-                .event(IComponentEvent.click, function (ev) {
-                var v1 = y.asInt();
-                var v2 = z.asInt();
-                var v3 = _this.mydata.btnFunc(v1, v2);
-                total.setValue(v3);
-                console.log(v3);
-                _this.mydata.v3 = v3;
-            })
-                .model(this.mydata)
-                .render();
-            var total = SpaLib$1.component();
-            total.template("\n\t\t\t<input type=\"text\">\n\t\t\t")
-                .event(IComponentEvent.mouseover, this.mydata.mover)
-                .model(this.mydata)
-                .render();
-            var twoWayBinding = SpaLib$1.component();
-            twoWayBinding.template("\n\t\t\t<div class=\"todo1\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t</div>\n\t\t\t")
-                .model(this.mydata)
-                .render();
-            debugger;
-            var repeater = new SpaRepeaterComponent(ToDoItem);
-            repeater.cssFile('../app/components/ToDoItem.css')
-                .handlers({
-                ondelete: function (v) {
-                    debugger;
-                    var newModel = _this.mydata.list.filter(function (el) { return el.id !== v.id; });
-                    _this.mydata.list = newModel;
-                    // repeater.setModel(newModel)
-                    repeater.remove(v.id);
-                }
-            })
-                .setModel(this.mydata.list);
-            SpaLib$1.component()
-                .template("\n\t\t\t\t<button>new todo</button>\n\t\t\t")
-                .event(IComponentEvent.click, function () { return _this.mydata.shownewtodoform = true; })
-                .model(this.mydata);
-            // .render();
-            var mService = new MobxService();
-            this.mydata = mService.asObservable(this.mydata);
-            mService.subscribe('v3', function (v) {
-                console.log(v);
+            var binding = SpaLib$1.component();
+            binding
+                .name('mobx test')
+                .template("\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t</div>\n\t\t\t\t")
+                .event(IComponentEvent.onchange, function (ev) {
                 debugger;
             })
-                .subscribe("shownewtodoform", function (newv, oldv) {
+                .event(IComponentEvent.onkeyup, function (ev) {
                 debugger;
-                if (newv) {
-                    var newtodof = SpaLib$1.component();
-                    newtodof.template("\n\t\t\t\t\t<input type=\"text\">\n\t\t\t\t\t<button id='savetodo'>new todo</button>\n\t\t\t\t")
-                        .render();
-                }
-            });
+                var val = _this.getEventValue(ev);
+                binding.setState('name', val + ' hello');
+            })
+                .subscribe('name', function (newValue) {
+                debugger;
+            })
+                .model(this.mydata)
+                .render();
         };
         return HomeComponent;
     }(BaseSpaComponent));
