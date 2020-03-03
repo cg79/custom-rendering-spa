@@ -88,7 +88,7 @@ export class HomeComponent extends BaseSpaComponent {
 			twoWayBinding.template(
 			`
 			<div class="todo1">
-					<input id={id} type="text" value={name}>
+					<input id="{id}" type="text" value="{name}">
 				</div>
 			`)
 			.model( this.mydata )

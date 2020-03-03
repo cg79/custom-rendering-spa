@@ -340,7 +340,7 @@ var roll = (function () {
             var _this = this;
             debugger;
             var y = SpaLib$1.component();
-            var h1Node = y.template("\n\t\t\t\n\t\t\t\t<div class=\"todo\">\n\t\t\t\t\t<input id={id} type=\"text\" value={name}>\n\t\t\t\t</div>\n\t\t\t")
+            var h1Node = y.template("\n\t\t\t\n\t\t\t\t<div class=\"todo\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t</div>\n\t\t\t")
                 .cssFile(this._cssFile)
                 .parentNode(this._parentNode)
                 .model(this._model)
@@ -1400,7 +1400,7 @@ var roll = (function () {
                 .model(this.mydata)
                 .render();
             var twoWayBinding = SpaLib$1.component();
-            twoWayBinding.template("\n\t\t\t<div class=\"todo1\">\n\t\t\t\t\t<input id={id} type=\"text\" value={name}>\n\t\t\t\t</div>\n\t\t\t")
+            twoWayBinding.template("\n\t\t\t<div class=\"todo1\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t</div>\n\t\t\t")
                 .model(this.mydata)
                 .render();
             debugger;

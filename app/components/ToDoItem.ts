@@ -24,7 +24,7 @@ export class ToDoItem extends BaseSpaComposedComponent {
 			`
 			
 				<div class="todo">
-					<input id={id} type="text" value={name}>
+					<input id="{id}" type="text" value="{name}">
 				</div>
 			`)
 
