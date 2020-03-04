@@ -17,6 +17,10 @@ export class SpaRender {
         return text;
     }
 
+    // getPropValue(propName) {
+
+    // }
+
     getHtml(template: string, data:any) : string {
         return  data ?  this.textToHtmlText( template, data ) : template;
     }

@@ -11,7 +11,7 @@ import { BaseSpaComponent } from '../../src/components/BaseSpaComponent';
 export class HomeComponent extends BaseSpaComponent {
 
 	mydata = {
-		id: 'xxx',
+		id: 'inputId',
 		id1: 'yyy',
 		btnFunc: ( v1, v2 ) => {
 			console.log( v1, v2 );
@@ -27,7 +27,8 @@ export class HomeComponent extends BaseSpaComponent {
 		text: "hello dinamic button",
 		name: 'test binding',
 		shownewtodoform: false,
-		inputclass: ''
+		showInput: true,
+		inputclass: 'default',
 	};
 
 	render () {
@@ -42,25 +43,30 @@ export class HomeComponent extends BaseSpaComponent {
 				`
 				<div class="todo1">
 						<input id="{id}" class="{inputclass}" type="text" value="{name}">
-						<input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
-						<label for="vehicle1"> I have a bike</label><br>
+						<button id="btnShowHide">show hide</button>
+						<label for="vehicle1"> Show Hide text box</label><br>
 					</div>
 				`)
+			.cssFile( '../app/components/HomeComponent.css' )
 			.event( IComponentEvent.onchange, ( newValue ) => {
 				debugger;
 				// const val = this.getEventValue(ev);
 				binding.setState( 'name', newValue );
-			}, 'myInput' )
-			.event( IComponentEvent.onchange, ( newValue ) => {
+			}, '{id}' )
+			.event( IComponentEvent.onclick, ( newValue ) => {
 				debugger;
 				// const val = this.getEventValue(ev);
-				if(newValue) {
-					binding.setState( '', 'hidden' );
+				const existingVal = binding.modelValue['showInput'];
+				const isVisible = !existingVal;
+
+				binding.setState( 'showInput', isVisible );
+				if(isVisible) {
+					binding.setState( 'inputclass', 'default' );
 				} else {
-					binding.setState( 'inputclass', 'test' );
+					binding.setState( 'inputclass', 'hidden' );
 				}
 				
-			}, 'vehicle1' )
+			}, 'btnShowHide' )
 			.subscribe( 'name', ( newValue ) => {
 				debugger;
 			} )

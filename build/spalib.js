@@ -1061,6 +1061,8 @@ var roll = (function () {
                 return _this;
             };
         }
+        // getPropValue(propName) {
+        // }
         SpaRender.prototype.getHtml = function (template, data) {
             return data ? this.textToHtmlText(template, data) : template;
         };
@@ -1097,16 +1099,20 @@ var roll = (function () {
             this.mobxSubsribers = [];
             this.stopTrigger = false;
             this.assignChildNodeEv = function (childNode, evName, evInfoArray) {
-                evInfoArray.forEach(function (evInfo) {
+                var evInfo = null;
+                var _loop_1 = function (i) {
+                    evInfo = evInfoArray[i];
                     var htmlElement = childNode;
                     var func = evInfo.func, id = evInfo.id;
-                    var exec = function (el) {
+                    var exec = function (el, func) {
                         var newValue = _this.getEventValue(el);
                         func(newValue);
+                        _this.refresh();
                     };
                     debugger;
                     if (id) {
-                        var idNOde = _this.findElementById(htmlElement, id);
+                        var idValue = _this.spaRenderer.textToHtmlText(id, _this.getModel());
+                        var idNOde = _this.findElementById(htmlElement, idValue);
                         if (idNOde) {
                             htmlElement = idNOde;
                         }
@@ -1116,12 +1122,17 @@ var roll = (function () {
                     //     throw new Error( `no html element for ${ id }` );
                     // }
                     htmlElement.addEventListener(evName, function (element) {
-                        exec(element);
+                        debugger;
+                        exec(element, func);
                     });
                     htmlElement[evName] = function (el) {
-                        exec(el);
+                        debugger;
+                        exec(el, func);
                     };
-                });
+                };
+                for (var i = 0; i < evInfoArray.length; i++) {
+                    _loop_1(i);
+                }
                 return _this;
             };
             this._containerTemplate = '';
@@ -1166,6 +1177,13 @@ var roll = (function () {
             this._model = state;
             return this;
         };
+        Object.defineProperty(BaseSpaComponent.prototype, "modelValue", {
+            get: function () {
+                return this.getModel();
+            },
+            enumerable: true,
+            configurable: true
+        });
         BaseSpaComponent.prototype.mobxModel = function (state) {
             this._mobxModel = state;
             return this;
@@ -1294,6 +1312,13 @@ var roll = (function () {
                 }
                 i++;
             }
+            i = 0;
+            if (!result) {
+                while (i < childNodes.length && !result) {
+                    result = this.findElementById(childNodes[i], id);
+                    i++;
+                }
+            }
             return result;
         };
         BaseSpaComponent.prototype.getModel = function () {
@@ -1308,9 +1333,18 @@ var roll = (function () {
             this.stopTrigger = false;
         };
         BaseSpaComponent.prototype.refresh = function () {
+            var _a = this, node = _a.node, components = _a.components;
             var model = this.getModel();
             var h = this.spaRenderer.getHtml(this._template, model);
-            this.node.innerHTML = h;
+            node.innerHTML = h;
+            this.assignEvents(node);
+            this.insertCssFile();
+            if (components && components.length) {
+                components.forEach(function (comp) {
+                    // comp.parentNode( parentNode );
+                    comp.render1();
+                });
+            }
         };
         BaseSpaComponent.prototype.renderLogic = function () {
             var _a = this, spaRenderer = _a.spaRenderer, components = _a.components;
@@ -1465,7 +1499,7 @@ var roll = (function () {
         function HomeComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.mydata = {
-                id: 'xxx',
+                id: 'inputId',
                 id1: 'yyy',
                 btnFunc: function (v1, v2) {
                     console.log(v1, v2);
@@ -1480,7 +1514,8 @@ var roll = (function () {
                 text: "hello dinamic button",
                 name: 'test binding',
                 shownewtodoform: false,
-                inputclass: ''
+                showInput: true,
+                inputclass: 'default',
             };
             return _this;
         }
@@ -1491,22 +1526,26 @@ var roll = (function () {
             var binding = SpaLib$1.component();
             binding
                 .name('mobx test')
-                .template("\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" class=\"{inputclass}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t\t<input type=\"checkbox\" id=\"vehicle1\" name=\"vehicle1\" value=\"Bike\">\n\t\t\t\t\t\t<label for=\"vehicle1\"> I have a bike</label><br>\n\t\t\t\t\t</div>\n\t\t\t\t")
+                .template("\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" class=\"{inputclass}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t\t<button id=\"btnShowHide\">show hide</button>\n\t\t\t\t\t\t<label for=\"vehicle1\"> Show Hide text box</label><br>\n\t\t\t\t\t</div>\n\t\t\t\t")
+                .cssFile('../app/components/HomeComponent.css')
                 .event(IComponentEvent.onchange, function (newValue) {
                 debugger;
                 // const val = this.getEventValue(ev);
                 binding.setState('name', newValue);
-            }, 'myInput')
-                .event(IComponentEvent.onchange, function (newValue) {
+            }, '{id}')
+                .event(IComponentEvent.onclick, function (newValue) {
                 debugger;
                 // const val = this.getEventValue(ev);
-                if (newValue) {
-                    binding.setState('', 'hidden');
+                var existingVal = binding.modelValue['showInput'];
+                var isVisible = !existingVal;
+                binding.setState('showInput', isVisible);
+                if (isVisible) {
+                    binding.setState('inputclass', 'default');
                 }
                 else {
-                    binding.setState('inputclass', 'test');
+                    binding.setState('inputclass', 'hidden');
                 }
-            }, 'vehicle1')
+            }, 'btnShowHide')
                 .subscribe('name', function (newValue) {
                 debugger;
             })

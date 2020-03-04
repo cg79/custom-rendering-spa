@@ -1,0 +1,11 @@
+.default {
+	background-color: rgb(110, 104, 104);
+}
+
+.hidden {
+	visibility: hidden;
+}
+
+.none {
+	display: none;
+}

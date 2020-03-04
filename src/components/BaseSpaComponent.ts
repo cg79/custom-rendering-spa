@@ -58,13 +58,13 @@ export abstract class BaseSpaComponent {
         return this;
     }
 
-    event ( eventName: IComponentEvent, func: Function, id='' ) {
+    event ( eventName: IComponentEvent, func: Function, id = '' ) {
         let ev = this.events[ eventName ];
-        if(!ev) {
+        if ( !ev ) {
             this.events[ eventName ] = [];
             ev = this.events[ eventName ];
         }
-        ev?.push({func,id});
+        ev?.push( { func, id } );
         return this;
     }
 
@@ -83,7 +83,10 @@ export abstract class BaseSpaComponent {
         return this;
     }
 
-    protected _mobxModel: IMobxModel| null = null; 
+    get modelValue() {
+        return this.getModel();
+    }
+    protected _mobxModel: IMobxModel | null = null;
     mobxModel ( state: IMobxModel ) {
         this._mobxModel = state;
         return this;
@@ -130,12 +133,12 @@ export abstract class BaseSpaComponent {
     }
 
     private applySubscribers () {
-        if(this.stopTrigger) {
+        if ( this.stopTrigger ) {
             return;
         }
         const { mobxSubsribers, _mobxModel } = this;
-        
-        if(!_mobxModel) {
+
+        if ( !_mobxModel ) {
             return;
         }
 
@@ -187,7 +190,7 @@ export abstract class BaseSpaComponent {
     private stopTrigger = false;
     setState ( propName: string, value: any ) {
         const m = this._mobxModel;
-        if(!m) {
+        if ( !m ) {
             return;
         }
         this.stopTrigger = true;
@@ -219,30 +222,35 @@ export abstract class BaseSpaComponent {
     protected assignEvents ( node: Node ) {
         const { events } = this;
         let eventInfo: Array<IEventInfo> | null = null;
-        Object.keys( events ).forEach( (key: string) => {
+        Object.keys( events ).forEach( ( key: string ) => {
             eventInfo = events[ key as IComponentEvent ] as Array<IEventInfo>;
-            if(eventInfo) {
-                this.assignChildNodeEv(node, key, eventInfo);
+            if ( eventInfo ) {
+                this.assignChildNodeEv( node, key, eventInfo );
             }
-            
+
             //spaRenderer.assignChildNodeEv( node, ev, func );
         } );
 
     }
 
-    private assignChildNodeEv = ( childNode:Node, evName: string, evInfoArray: Array<IEventInfo> ) => {
-        evInfoArray.forEach(evInfo => {
+    private assignChildNodeEv = ( childNode: Node, evName: string, evInfoArray: Array<IEventInfo> ) => {
+        let evInfo: IEventInfo | null = null;
+
+        for ( let i = 0; i < evInfoArray.length; i++ ) {
+            evInfo = evInfoArray[ i ];
             let htmlElement = childNode;
-            const {func, id} = evInfo;
-            const exec = ( el ) => { 
-                const newValue = this.getEventValue(el);
-                func( newValue ) ;
+            const { func, id } = evInfo;
+            const exec = ( el: Event, func: Function ) => {
+                const newValue = this.getEventValue( el );
+                func( newValue );
+                this.refresh();
             };
-    
+
             debugger;
-            if(id) {
-                const idNOde = this.findElementById(htmlElement, id);
-                if(idNOde) {
+            if ( id ) {
+                const idValue = this.spaRenderer.textToHtmlText(id, this.getModel());
+                const idNOde = this.findElementById( htmlElement, idValue );
+                if ( idNOde ) {
                     htmlElement = idNOde;
                 }
             }
@@ -251,59 +259,80 @@ export abstract class BaseSpaComponent {
             //     throw new Error( `no html element for ${ id }` );
             // }
             htmlElement.addEventListener( evName, ( element ) => {
-                exec( element );
+                debugger;
+                exec( element, func );
             } );
-    
-            htmlElement[evName] = (el) => {
-                exec(el);
+
+            htmlElement[ evName ] = ( el ) => {
+                debugger;
+                exec( el, func );
             };
-        })
-        
+        }
+
         return this;
     }
 
-    private findElementById(parent: Node, id: string): Node | null {
-        if(!parent) {
+    private findElementById ( parent: Node, id: string ): Node | null {
+        if ( !parent ) {
             return null;
         }
-        if(parent.id === id) {
+        if ( parent.id === id ) {
             return parent;
         }
 
-        const {childNodes} = parent;
-        if(!childNodes) {
+        const { childNodes } = parent;
+        if ( !childNodes ) {
             return null;
         }
         let i = 0;
         let result: Node | null = null;
-        while(i< childNodes.length && !result) {
-            if(childNodes[i].id === id) {
-                result = childNodes[i];
+        while ( i < childNodes.length && !result ) {
+            if ( childNodes[ i ].id === id ) {
+                result = childNodes[ i ];
             }
             i++;
+        }
+        i = 0;
+        if(!result) {
+            while ( i < childNodes.length && !result ) {
+                result = this.findElementById(childNodes[i], id)
+                i++;
+            }   
         }
         return result;
     }
 
-    protected getModel() {
-        return this._model || (this._mobxModel && this._mobxModel.object);
+    protected getModel () {
+        return this._model || ( this._mobxModel && this._mobxModel.object );
     }
 
-    componentReceiveProps(newProps: any) {
-        if(!newProps) {
+    componentReceiveProps ( newProps: any ) {
+        if ( !newProps ) {
             return;
         }
         this.stopTrigger = true;
         this.refresh();
-        this.stopTrigger = false;  
+        this.stopTrigger = false;
     }
 
-    private refresh() {
+    private refresh () {
+        const {node, components} = this;
         const model = this.getModel();
-        const h = this.spaRenderer.getHtml(this._template, model);
-        this.node.innerHTML = h;
+        const h = this.spaRenderer.getHtml( this._template, model );
+        node.innerHTML = h;
+        this.assignEvents( node );
+        this.insertCssFile();
+
+        if ( components && components.length ) {
+            
+            components.forEach( comp => {
+                // comp.parentNode( parentNode );
+                comp.render1();
+            } )
+        }
+
     }
-    private renderLogic(): Node | null {
+    private renderLogic (): Node | null {
         const { spaRenderer, components } = this;
         let node = null;
         const model = this.getModel();
@@ -322,12 +351,12 @@ export abstract class BaseSpaComponent {
         this.insertCssFile();
 
         this.assignEvents( node );
-
+        
         return node;
     }
     protected render1 (): Node | null {
         const { spaRenderer, components } = this;
-        const node =  this.renderLogic();
+        const node = this.renderLogic();
         this.applySubscribers();
 
         if ( components && components.length ) {
@@ -352,12 +381,12 @@ export abstract class BaseSpaComponent {
         return this;
     }
     getEventValue ( ev: Event ): string | null {
-        const {target} = ev;
-        if(!target) {
+        const { target } = ev;
+        if ( !target ) {
             return null;
         }
-        switch(target.type) {
-            case 'checkbox' : {
+        switch ( target.type ) {
+            case 'checkbox': {
                 return target.checked;
             }
             default: {
