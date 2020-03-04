@@ -1107,7 +1107,7 @@ var roll = (function () {
                     var exec = function (el, func) {
                         var newValue = _this.getEventValue(el);
                         func(newValue);
-                        _this.refresh();
+                        // this.refresh();
                     };
                     debugger;
                     if (id) {
@@ -1526,12 +1526,13 @@ var roll = (function () {
             var binding = SpaLib$1.component();
             binding
                 .name('mobx test')
-                .template("\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" class=\"{inputclass}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t\t<button id=\"btnShowHide\">show hide</button>\n\t\t\t\t\t\t<label for=\"vehicle1\"> Show Hide text box</label><br>\n\t\t\t\t\t</div>\n\t\t\t\t")
+                .template("\n\t\t\t\t<div>\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" class=\"{inputclass}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t\t<button id=\"btnShowHide\">show hide</button>\n\t\t\t\t\t\t<label for=\"vehicle1\"> Show Hide text box</label><br>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div>\n\t\t\t\t\t\t<label>{name}</label>\n\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t")
                 .cssFile('../app/components/HomeComponent.css')
                 .event(IComponentEvent.onchange, function (newValue) {
                 debugger;
                 // const val = this.getEventValue(ev);
                 binding.setState('name', newValue);
+                binding.componentReceiveProps({});
             }, '{id}')
                 .event(IComponentEvent.onclick, function (newValue) {
                 debugger;
@@ -1545,21 +1546,24 @@ var roll = (function () {
                 else {
                     binding.setState('inputclass', 'hidden');
                 }
+                binding.componentReceiveProps({ showInput: isVisible });
             }, 'btnShowHide')
                 .subscribe('name', function (newValue) {
                 debugger;
             })
                 .containerTemplate("\n\t\t\t\t\t<div class=\"parent\">\n\t\t\t\t\t</div>\n            ")
                 .mobxModel(mobxModel)
-                .addComponent(function (comp) {
-                comp.name('new 1')
-                    .mobxModel(mobxModel)
-                    .subscribe('name', function (newValue) {
-                    debugger;
-                    comp.componentReceiveProps({ name: newValue });
-                })
-                    .template("\n\t\t\t\t\t<label>{name}</label>\n\t\t\t\t");
-            })
+                // .addComponent( ( comp ) => {
+                // 	comp.name( 'new 1' )
+                // 		.mobxModel( mobxModel )
+                // 		.subscribe( 'name', ( newValue ) => {
+                // 			debugger;
+                // 			comp.componentReceiveProps( { name: newValue } );
+                // 		} )
+                // 		.template( `
+                // 		<label>{name}</label>
+                // 	`)
+                // } )
                 .render();
         };
         return HomeComponent;

@@ -243,7 +243,7 @@ export abstract class BaseSpaComponent {
             const exec = ( el: Event, func: Function ) => {
                 const newValue = this.getEventValue( el );
                 func( newValue );
-                this.refresh();
+                // this.refresh();
             };
 
             debugger;

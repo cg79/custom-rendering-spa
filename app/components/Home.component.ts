@@ -41,10 +41,15 @@ export class HomeComponent extends BaseSpaComponent {
 			.name( 'mobx test' )
 			.template(
 				`
+				<div>
 				<div class="todo1">
 						<input id="{id}" class="{inputclass}" type="text" value="{name}">
 						<button id="btnShowHide">show hide</button>
 						<label for="vehicle1"> Show Hide text box</label><br>
+					</div>
+					<div>
+						<label>{name}</label>
+					</div>
 					</div>
 				`)
 			.cssFile( '../app/components/HomeComponent.css' )
@@ -52,6 +57,8 @@ export class HomeComponent extends BaseSpaComponent {
 				debugger;
 				// const val = this.getEventValue(ev);
 				binding.setState( 'name', newValue );
+
+				binding.componentReceiveProps({});
 			}, '{id}' )
 			.event( IComponentEvent.onclick, ( newValue ) => {
 				debugger;
@@ -65,7 +72,9 @@ export class HomeComponent extends BaseSpaComponent {
 				} else {
 					binding.setState( 'inputclass', 'hidden' );
 				}
-				
+
+				binding.componentReceiveProps( { showInput: isVisible } );
+
 			}, 'btnShowHide' )
 			.subscribe( 'name', ( newValue ) => {
 				debugger;
@@ -76,17 +85,17 @@ export class HomeComponent extends BaseSpaComponent {
 					</div>
             `)
 			.mobxModel( mobxModel )
-			.addComponent( ( comp ) => {
-				comp.name( 'new 1' )
-					.mobxModel( mobxModel )
-					.subscribe( 'name', ( newValue ) => {
-						debugger;
-						comp.componentReceiveProps( { name: newValue } );
-					} )
-					.template( `
-					<label>{name}</label>
-				`)
-			} )
+			// .addComponent( ( comp ) => {
+			// 	comp.name( 'new 1' )
+			// 		.mobxModel( mobxModel )
+			// 		.subscribe( 'name', ( newValue ) => {
+			// 			debugger;
+			// 			comp.componentReceiveProps( { name: newValue } );
+			// 		} )
+			// 		.template( `
+			// 		<label>{name}</label>
+			// 	`)
+			// } )
 			.render();
 
 	}
