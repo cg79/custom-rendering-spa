@@ -6,4 +6,5 @@ lib
 coverage
 dist
 tests/smoke/release
+build
 

@@ -1076,6 +1076,7 @@ var roll = (function () {
 
     var BaseSpaComponent = /** @class */ (function () {
         function BaseSpaComponent() {
+            var _this = this;
             this._template = '';
             this.node = null;
             this.events = {};
@@ -1095,6 +1096,34 @@ var roll = (function () {
             this.components = [];
             this.mobxSubsribers = [];
             this.stopTrigger = false;
+            this.assignChildNodeEv = function (childNode, evName, evInfoArray) {
+                evInfoArray.forEach(function (evInfo) {
+                    var htmlElement = childNode;
+                    var func = evInfo.func, id = evInfo.id;
+                    var exec = function (el) {
+                        var newValue = _this.getEventValue(el);
+                        func(newValue);
+                    };
+                    debugger;
+                    if (id) {
+                        var idNOde = _this.findElementById(htmlElement, id);
+                        if (idNOde) {
+                            htmlElement = idNOde;
+                        }
+                    }
+                    // htmlElement = document.getElementById( id );
+                    // if ( !htmlElement ) {
+                    //     throw new Error( `no html element for ${ id }` );
+                    // }
+                    htmlElement.addEventListener(evName, function (element) {
+                        exec(element);
+                    });
+                    htmlElement[evName] = function (el) {
+                        exec(el);
+                    };
+                });
+                return _this;
+            };
             this._containerTemplate = '';
             this.spaRenderer = new SpaRender();
         }
@@ -1114,8 +1143,15 @@ var roll = (function () {
             this._cssFile = cssFilePath;
             return this;
         };
-        BaseSpaComponent.prototype.event = function (eventName, func) {
-            this.events[eventName] = func;
+        BaseSpaComponent.prototype.event = function (eventName, func, id) {
+            if (id === void 0) { id = ''; }
+            var _a;
+            var ev = this.events[eventName];
+            if (!ev) {
+                this.events[eventName] = [];
+                ev = this.events[eventName];
+            }
+            (_a = ev) === null || _a === void 0 ? void 0 : _a.push({ func: func, id: id });
             return this;
         };
         BaseSpaComponent.prototype.handlers = function (val) {
@@ -1228,12 +1264,37 @@ var roll = (function () {
             return this.spaRenderer.getHtml(this._template, this._model);
         };
         BaseSpaComponent.prototype.assignEvents = function (node) {
-            var _a = this, events = _a.events, spaRenderer = _a.spaRenderer;
-            var func = null;
-            Object.keys(events).forEach(function (ev) {
-                func = events[ev];
-                spaRenderer.assignChildNodeEv(node, ev, func);
+            var _this = this;
+            var events = this.events;
+            var eventInfo = null;
+            Object.keys(events).forEach(function (key) {
+                eventInfo = events[key];
+                if (eventInfo) {
+                    _this.assignChildNodeEv(node, key, eventInfo);
+                }
+                //spaRenderer.assignChildNodeEv( node, ev, func );
             });
+        };
+        BaseSpaComponent.prototype.findElementById = function (parent, id) {
+            if (!parent) {
+                return null;
+            }
+            if (parent.id === id) {
+                return parent;
+            }
+            var childNodes = parent.childNodes;
+            if (!childNodes) {
+                return null;
+            }
+            var i = 0;
+            var result = null;
+            while (i < childNodes.length && !result) {
+                if (childNodes[i].id === id) {
+                    result = childNodes[i];
+                }
+                i++;
+            }
+            return result;
         };
         BaseSpaComponent.prototype.getModel = function () {
             return this._model || (this._mobxModel && this._mobxModel.object);
@@ -1287,7 +1348,18 @@ var roll = (function () {
             return this;
         };
         BaseSpaComponent.prototype.getEventValue = function (ev) {
-            return ev.target ? ev.target.value : null;
+            var target = ev.target;
+            if (!target) {
+                return null;
+            }
+            switch (target.type) {
+                case 'checkbox': {
+                    return target.checked;
+                }
+                default: {
+                    return target.value;
+                }
+            }
         };
         BaseSpaComponent.prototype.getEventValueAsNumber = function (ev) {
             return ev.target ? ev.target.value : null;
@@ -1407,24 +1479,34 @@ var roll = (function () {
                 list: [{ id: '1a', name: 'john' }, { id: '2a', name: 'ionela' }],
                 text: "hello dinamic button",
                 name: 'test binding',
-                shownewtodoform: false
+                shownewtodoform: false,
+                inputclass: ''
             };
             return _this;
         }
         HomeComponent.prototype.render = function () {
-            var _this = this;
             var mService = new MobxService();
             var mobxModel = mService.asObservable(this.mydata);
             debugger;
             var binding = SpaLib$1.component();
             binding
                 .name('mobx test')
-                .template("\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t</div>\n\t\t\t\t")
-                .event(IComponentEvent.onchange, function (ev) {
+                .template("\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" class=\"{inputclass}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t\t<input type=\"checkbox\" id=\"vehicle1\" name=\"vehicle1\" value=\"Bike\">\n\t\t\t\t\t\t<label for=\"vehicle1\"> I have a bike</label><br>\n\t\t\t\t\t</div>\n\t\t\t\t")
+                .event(IComponentEvent.onchange, function (newValue) {
                 debugger;
-                var val = _this.getEventValue(ev);
-                binding.setState('name', val + ' hello');
-            })
+                // const val = this.getEventValue(ev);
+                binding.setState('name', newValue);
+            }, 'myInput')
+                .event(IComponentEvent.onchange, function (newValue) {
+                debugger;
+                // const val = this.getEventValue(ev);
+                if (newValue) {
+                    binding.setState('', 'hidden');
+                }
+                else {
+                    binding.setState('inputclass', 'test');
+                }
+            }, 'vehicle1')
                 .subscribe('name', function (newValue) {
                 debugger;
             })

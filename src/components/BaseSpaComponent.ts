@@ -2,7 +2,7 @@ import { SpaComponent } from './SpaComponent';
 import { MobxService } from './../services/MobxService';
 import { SpaRender } from "../rendering/SpaRender";
 import { IComponentEvent } from "./events/IComponentEvent";
-import { IEventType } from "./events/IEventType";
+import { IEventType, IEventInfo } from "./events/IEventType";
 import { observe } from 'rxjs-observe';
 import { IMobxModel } from '../services/IMobxModel';
 
@@ -58,8 +58,13 @@ export abstract class BaseSpaComponent {
         return this;
     }
 
-    event ( eventName: IComponentEvent, func: Function ) {
-        this.events[ eventName ] = func;
+    event ( eventName: IComponentEvent, func: Function, id='' ) {
+        let ev = this.events[ eventName ];
+        if(!ev) {
+            this.events[ eventName ] = [];
+            ev = this.events[ eventName ];
+        }
+        ev?.push({func,id});
         return this;
     }
 
@@ -212,13 +217,72 @@ export abstract class BaseSpaComponent {
     }
 
     protected assignEvents ( node: Node ) {
-        const { events, spaRenderer } = this;
-        let func = null;
-        Object.keys( events ).forEach( ev => {
-            func = events[ ev as IComponentEvent ] as Function;
-            spaRenderer.assignChildNodeEv( node, ev, func );
+        const { events } = this;
+        let eventInfo: Array<IEventInfo> | null = null;
+        Object.keys( events ).forEach( (key: string) => {
+            eventInfo = events[ key as IComponentEvent ] as Array<IEventInfo>;
+            if(eventInfo) {
+                this.assignChildNodeEv(node, key, eventInfo);
+            }
+            
+            //spaRenderer.assignChildNodeEv( node, ev, func );
         } );
 
+    }
+
+    private assignChildNodeEv = ( childNode:Node, evName: string, evInfoArray: Array<IEventInfo> ) => {
+        evInfoArray.forEach(evInfo => {
+            let htmlElement = childNode;
+            const {func, id} = evInfo;
+            const exec = ( el ) => { 
+                const newValue = this.getEventValue(el);
+                func( newValue ) ;
+            };
+    
+            debugger;
+            if(id) {
+                const idNOde = this.findElementById(htmlElement, id);
+                if(idNOde) {
+                    htmlElement = idNOde;
+                }
+            }
+            // htmlElement = document.getElementById( id );
+            // if ( !htmlElement ) {
+            //     throw new Error( `no html element for ${ id }` );
+            // }
+            htmlElement.addEventListener( evName, ( element ) => {
+                exec( element );
+            } );
+    
+            htmlElement[evName] = (el) => {
+                exec(el);
+            };
+        })
+        
+        return this;
+    }
+
+    private findElementById(parent: Node, id: string): Node | null {
+        if(!parent) {
+            return null;
+        }
+        if(parent.id === id) {
+            return parent;
+        }
+
+        const {childNodes} = parent;
+        if(!childNodes) {
+            return null;
+        }
+        let i = 0;
+        let result: Node | null = null;
+        while(i< childNodes.length && !result) {
+            if(childNodes[i].id === id) {
+                result = childNodes[i];
+            }
+            i++;
+        }
+        return result;
     }
 
     protected getModel() {
@@ -288,7 +352,18 @@ export abstract class BaseSpaComponent {
         return this;
     }
     getEventValue ( ev: Event ): string | null {
-        return ev.target ? ev.target.value : null;
+        const {target} = ev;
+        if(!target) {
+            return null;
+        }
+        switch(target.type) {
+            case 'checkbox' : {
+                return target.checked;
+            }
+            default: {
+                return target.value;
+            }
+        }
     }
 
     getEventValueAsNumber ( ev: Event ): Number | null {

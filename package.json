@@ -17,9 +17,7 @@
     "url": "https://github.com/cg79/custom-rendering-spa/issues"
   },
   "homepage": "https://github.com/cg79/custom-rendering-spa#readme",
-  "dependencies": {
-    "rxjs-observe": "^2.1.5"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/lodash": "^4.14.149",
     "lodash": "^4.17.15",
@@ -36,6 +34,7 @@
     "rollup-plugin-replace": "^2.2.0",
     "rollup-plugin-typescript": "^1.0.1",
     "rollup-plugin-uglify": "^6.0.3",
+    "rxjs-observe": "^2.1.5",
     "typescript": "^3.7.2"
   }
 }

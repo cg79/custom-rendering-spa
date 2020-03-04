@@ -26,7 +26,8 @@ export class HomeComponent extends BaseSpaComponent {
 		list: [ { id: '1a', name: 'john' }, { id: '2a', name: 'ionela' } ],
 		text: "hello dinamic button",
 		name: 'test binding',
-		shownewtodoform: false
+		shownewtodoform: false,
+		inputclass: ''
 	};
 
 	render () {
@@ -35,39 +36,51 @@ export class HomeComponent extends BaseSpaComponent {
 		debugger;
 
 		var binding = SpaLib.component();
-			binding
-			.name('mobx test')
+		binding
+			.name( 'mobx test' )
 			.template(
 				`
 				<div class="todo1">
-						<input id="{id}" type="text" value="{name}">
+						<input id="{id}" class="{inputclass}" type="text" value="{name}">
+						<input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
+						<label for="vehicle1"> I have a bike</label><br>
 					</div>
 				`)
-			.event(IComponentEvent.onchange, (ev) => {
+			.event( IComponentEvent.onchange, ( newValue ) => {
 				debugger;
-				const val = this.getEventValue(ev);
-				binding.setState('name', val + ' hello');
-			})
-			.subscribe('name', (newValue) => {
+				// const val = this.getEventValue(ev);
+				binding.setState( 'name', newValue );
+			}, 'myInput' )
+			.event( IComponentEvent.onchange, ( newValue ) => {
 				debugger;
-			})
+				// const val = this.getEventValue(ev);
+				if(newValue) {
+					binding.setState( '', 'hidden' );
+				} else {
+					binding.setState( 'inputclass', 'test' );
+				}
+				
+			}, 'vehicle1' )
+			.subscribe( 'name', ( newValue ) => {
+				debugger;
+			} )
 			.containerTemplate(
 				`
 					<div class="parent">
 					</div>
             `)
 			.mobxModel( mobxModel )
-			.addComponent((comp) => {
-				comp.name('new 1')
-				.mobxModel(mobxModel)
-				.subscribe('name', (newValue) => {
-					debugger;
-					comp.componentReceiveProps({name: newValue});
-				})
-				.template(`
+			.addComponent( ( comp ) => {
+				comp.name( 'new 1' )
+					.mobxModel( mobxModel )
+					.subscribe( 'name', ( newValue ) => {
+						debugger;
+						comp.componentReceiveProps( { name: newValue } );
+					} )
+					.template( `
 					<label>{name}</label>
 				`)
-			})
+			} )
 			.render();
 
 	}
