@@ -19,7 +19,7 @@ export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends Ba
         return new this.testType();
     }
 
-    private _parentNode: Node | null = null;
+    // private _parentNode: Node | null = null;
     setModel( list: Array<any> ) {
         if ( !list ) {
             return;

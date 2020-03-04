@@ -4,6 +4,8 @@ import { SpaComponent } from '../../src/components/SpaComponent';
 
 import SpaLib from '../../src/SpaLib';
 import { IComponentEvent } from '../../src/components/events/IComponentEvent';
+import { IMobxModel } from '../../src/services/IMobxModel';
+import { ToDoItem } from './ToDoItem';
 
 export class ListComponent extends SpaComponent {
 
@@ -26,12 +28,15 @@ export class ListComponent extends SpaComponent {
 
 	render () {
 
+		const mService = new MobxService();
+		const mobxModel: IMobxModel = mService.asObservable( this.mydata );
+
 		var y = SpaLib.component()
 			.template(
 				`
 			<input type="text">
 			`)
-			.model( this.mydata )
+			.mobxModel( mobxModel )
 			.event( IComponentEvent.onmouseover, this.mydata.mover )
 			.render();
 
@@ -40,7 +45,7 @@ export class ListComponent extends SpaComponent {
 				`
 			<input type="text">
 			`)
-			.model( this.mydata )
+			.mobxModel( mobxModel )
 			.render();
 
 		var x = SpaLib.component()
@@ -48,39 +53,47 @@ export class ListComponent extends SpaComponent {
 				`
 				<button>{id1}</button>
 			`)
-			.model( this.mydata )
+			.mobxModel( mobxModel )
 			.event( IComponentEvent.onclick, ( ev ) => {
-				var v1 = y.asInt();
-				var v2 = z.asInt();
+				var v1 = this.getValue(y);
+				var v2 = this.getValue(z);
 
-				var v3 = this.mydata.btnFunc( v1, v2 );
+				var v3 = v1 + v2;
 
-				total.setValue( v3 );
+				// total.setValue( v3 );
 				console.log( v3 );
 
-				this.mydata.v3 = v3;
+				total.setState( 'v3', v3 );
+
+				// this.mydata.object.v3 = v3;
+
+				// total.componentReceiveProps({});
+				total.setValue(v3);
 
 			} )
 			.render();
 
-		var total = SpaLib.component()
-			.template(
+		var total = SpaLib.component();
+			total.template(
 				`
-			<input type="text">
+			<input type="text" value="{v3}">
 			`)
-			.model( this.mydata )
+			.mobxModel( mobxModel )
 			.event( IComponentEvent.onmouseover, this.mydata.mover )
 			.render();
 
-		// var repeater = new SpaRepeaterComponent<>	
-		debugger;
-
-		const mService = new MobxService();
-		this.mydata = mService.asObservable( this.mydata );
-		mService.subscribe( 'v3', ( v ) => {
-			console.log( v );
-			debugger;
-		} )
-
+			const repeater = new SpaRepeaterComponent<ToDoItem>( ToDoItem )
+			repeater.cssFile( '../app/components/ToDoItem.css' )
+				.handlers( {
+					ondelete: ( v ) => {
+						debugger;
+						const newModel = this.mydata.list.filter( el => el.id !== v.id );
+						this.mydata.list = newModel;
+						// repeater.setModel(newModel)
+						repeater.remove( v.id );
+					}
+	
+				} )
+				.mobxModel( mobxModel )
 	}
 }

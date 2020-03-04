@@ -1,0 +1,65 @@
+<html>
+
+<head>
+	<script src="../dist/spalib.js"></script>
+</head>
+
+<body>
+	<div>
+		<div id='a'>
+			<button id='btna'>Click</button>
+			<button id='btnb'>Click</button>
+
+			<button id='btnInsHtml'>Insert html</button>
+
+			<button id='btnInsNewElement'>Insert new Element</button>
+		</div>
+	</div>
+</body>
+
+
+<script type="text/javascript">
+
+	guid = () => {
+		const S4 = function () {
+			return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+		}
+
+		return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0, 3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
+	}
+
+	const mydata = {
+		id: 'xxx',
+		id1: 'yyy',
+		btnFunc: (val, v2) => {
+			console.log(val);
+		},
+		list: [{ id: '1a', name: 'john' }, { id: '2a', name: 'ionela' }],
+		text: "hello dinamic button"
+	};
+debugger;
+	const list = spalib.components['list'];
+	list.render();
+
+	// var x = spalib.component()
+	// 	.template(
+	// 		`
+	// 			<span>{id1}</span>
+	// 		`)
+	// 	.model(mydata).render();
+
+
+	// var y = spalib.component()
+	// 	.template(
+	// 		`
+	// 			<button>{id1}</button>
+	// 		`)
+	// 	.model(mydata)
+	// 	.event()
+	// 	.render();
+
+	// console.log(x);
+
+</script>
+
+</html>

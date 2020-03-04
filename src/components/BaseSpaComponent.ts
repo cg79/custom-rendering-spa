@@ -175,11 +175,11 @@ export abstract class BaseSpaComponent {
         }
         this.node[ 'value' ] = val;
     }
-    getValue (): string | null {
-        if ( !this.node ) {
+    getValue (node = this.node): string | null {
+        if ( !node ) {
             return null;
         }
-        return this.node[ 'value' ];
+        return node[ 'value' ];
     }
 
     asInt () {
@@ -319,6 +319,9 @@ export abstract class BaseSpaComponent {
         const {node, components} = this;
         const model = this.getModel();
         const h = this.spaRenderer.getHtml( this._template, model );
+        // if(node.type === 'text') {
+        //     node.value = 
+        // }
         node.innerHTML = h;
         this.assignEvents( node );
         this.insertCssFile();

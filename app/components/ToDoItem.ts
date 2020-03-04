@@ -43,7 +43,7 @@ export class ToDoItem extends BaseSpaComposedComponent {
 
 			.handlers( this._handlers )
 			.parentNode(this._parentNode)
-			.event( IComponentEvent.click, ( ev ) => {
+			.event( IComponentEvent.onclick, ( ev ) => {
 				debugger;
 				var v1 = y.asInt();
 				console.log( v1 );

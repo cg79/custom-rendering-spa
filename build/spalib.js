@@ -30,6 +30,28 @@ var roll = (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
+    var SpaComponent = /** @class */ (function (_super) {
+        __extends(SpaComponent, _super);
+        function SpaComponent() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SpaComponent.prototype.render = function () {
+            return this.render1();
+            // const {events, spaRenderer} = this;
+            // const node =  spaRenderer.insertElement('a',this._template, this._model);
+            // if(!node) {
+            //     return;
+            // }
+            // this.node = node;
+            // let func = null;
+            // Object.keys(events).forEach(ev => {
+            //     func = events[ev as IComponentEvent] as Function;
+            //     spaRenderer.assignChildNodeEv(node, ev, func);
+            // });
+        };
+        return SpaComponent;
+    }(BaseSpaComponent));
+
     /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function isFunction(x) {
         return typeof x === 'function';
@@ -1246,11 +1268,12 @@ var roll = (function () {
             }
             this.node['value'] = val;
         };
-        BaseSpaComponent.prototype.getValue = function () {
-            if (!this.node) {
+        BaseSpaComponent.prototype.getValue = function (node) {
+            if (node === void 0) { node = this.node; }
+            if (!node) {
                 return null;
             }
-            return this.node['value'];
+            return node['value'];
         };
         BaseSpaComponent.prototype.asInt = function () {
             var v = this.getValue();
@@ -1336,6 +1359,9 @@ var roll = (function () {
             var _a = this, node = _a.node, components = _a.components;
             var model = this.getModel();
             var h = this.spaRenderer.getHtml(this._template, model);
+            // if(node.type === 'text') {
+            //     node.value = 
+            // }
             node.innerHTML = h;
             this.assignEvents(node);
             this.insertCssFile();
@@ -1404,26 +1430,54 @@ var roll = (function () {
         return BaseSpaComponent;
     }());
 
-    var SpaComponent = /** @class */ (function (_super) {
-        __extends(SpaComponent, _super);
-        function SpaComponent() {
-            return _super !== null && _super.apply(this, arguments) || this;
+    var SpaRepeaterComponent = /** @class */ (function (_super) {
+        __extends(SpaRepeaterComponent, _super);
+        function SpaRepeaterComponent(testType) {
+            var _this = _super.call(this) || this;
+            _this.testType = testType;
+            _this.nodes = {};
+            _this._parentTemplate = '';
+            return _this;
         }
-        SpaComponent.prototype.render = function () {
-            return this.render1();
-            // const {events, spaRenderer} = this;
-            // const node =  spaRenderer.insertElement('a',this._template, this._model);
-            // if(!node) {
-            //     return;
-            // }
-            // this.node = node;
-            // let func = null;
-            // Object.keys(events).forEach(ev => {
-            //     func = events[ev as IComponentEvent] as Function;
-            //     spaRenderer.assignChildNodeEv(node, ev, func);
-            // });
+        SpaRepeaterComponent.prototype.render = function () {
+            throw new Error("Method not implemented.");
         };
-        return SpaComponent;
+        SpaRepeaterComponent.prototype.getNew = function () {
+            return new this.testType();
+        };
+        // private _parentNode: Node | null = null;
+        SpaRepeaterComponent.prototype.setModel = function (list) {
+            var _this = this;
+            if (!list) {
+                return;
+            }
+            this._parentNode = this.spaRenderer.insertHtml('a', "\n\t\t\t<div class=\"todoContainer\">\n\t\t\t</div>\n\t\t\t");
+            var comp = null;
+            list.forEach(function (el) {
+                var containerItemNode = _this.spaRenderer.addHmlChild(_this._parentNode, "\n\t\t\t<div class=\"todorow\" id=\"todolist\">\n\t\t\t</div>\n            ");
+                comp = _this.getNew();
+                var node = comp.handlers(_this._handlers).cssFile(_this._cssFile)
+                    .parentNode(containerItemNode)
+                    .model(el)
+                    .triggerRender();
+                _this.nodes[el.id] = node;
+            });
+        };
+        SpaRepeaterComponent.prototype.parentTemplate = function (template) {
+            this._parentTemplate = template;
+            return this;
+        };
+        SpaRepeaterComponent.prototype.remove = function (key) {
+            var node = this.nodes[key];
+            if (!node) {
+                return;
+            }
+            if (!this._parentNode) {
+                return;
+            }
+            this._parentNode.removeChild(node);
+        };
+        return SpaRepeaterComponent;
     }(BaseSpaComponent));
 
     // import { SpaLabel } from './components/SpaLabel';
@@ -1493,6 +1547,127 @@ var roll = (function () {
         IComponentEvent["onmouseup"] = "onmouseup";
         IComponentEvent["onmousewheel"] = "onmousewheel";
     })(IComponentEvent || (IComponentEvent = {}));
+
+    var BaseSpaComposedComponent = /** @class */ (function (_super) {
+        __extends(BaseSpaComposedComponent, _super);
+        function BaseSpaComposedComponent() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        BaseSpaComposedComponent.prototype.model = function (state) {
+            this._model = state;
+            return this;
+        };
+        return BaseSpaComposedComponent;
+    }(BaseSpaComponent));
+
+    var ToDoItem = /** @class */ (function (_super) {
+        __extends(ToDoItem, _super);
+        function ToDoItem() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._html = '';
+            return _this;
+        }
+        ToDoItem.prototype.render = function () {
+            // const node = this.spaRenderer.insertHtml('a', this._html);
+            debugger;
+        };
+        ToDoItem.prototype.triggerRender = function () {
+            var _this = this;
+            debugger;
+            var y = SpaLib$1.component();
+            var h1Node = y.template("\n\t\t\t\n\t\t\t\t<div class=\"todo\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t</div>\n\t\t\t")
+                .cssFile(this._cssFile)
+                .parentNode(this._parentNode)
+                .model(this._model)
+                .render();
+            var x = SpaLib$1.component();
+            var h2Node = x.template("\n\t\t\t\t<button>{id}</button>\n\t\t\t\t</div>\n\t\t\t")
+                .handlers(this._handlers)
+                .parentNode(this._parentNode)
+                .event(IComponentEvent.onclick, function (ev) {
+                debugger;
+                var v1 = y.asInt();
+                console.log(v1);
+                _this._handlers['ondelete'](_this._model);
+            })
+                .model(this._model)
+                .render();
+            this._parentNode.appendChild(h1Node);
+            this._parentNode.appendChild(h2Node);
+            return this._parentNode;
+        };
+        return ToDoItem;
+    }(BaseSpaComposedComponent));
+
+    var ListComponent = /** @class */ (function (_super) {
+        __extends(ListComponent, _super);
+        function ListComponent() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.mydata = {
+                id: 'xxx',
+                id1: 'yyy',
+                btnFunc: function (v1, v2) {
+                    console.log(v1, v2);
+                    return v1 + v2;
+                },
+                v3: 0,
+                mover: function (val, v2) {
+                    debugger;
+                    console.log(val);
+                },
+                list: [{ id: '1a', name: 'john' }, { id: '2a', name: 'ionela' }],
+                text: "hello dinamic button"
+            };
+            return _this;
+        }
+        ListComponent.prototype.render = function () {
+            var _this = this;
+            var mService = new MobxService();
+            var mobxModel = mService.asObservable(this.mydata);
+            var y = SpaLib$1.component()
+                .template("\n\t\t\t<input type=\"text\">\n\t\t\t")
+                .mobxModel(mobxModel)
+                .event(IComponentEvent.onmouseover, this.mydata.mover)
+                .render();
+            var z = SpaLib$1.component()
+                .template("\n\t\t\t<input type=\"text\">\n\t\t\t")
+                .mobxModel(mobxModel)
+                .render();
+            var x = SpaLib$1.component()
+                .template("\n\t\t\t\t<button>{id1}</button>\n\t\t\t")
+                .mobxModel(mobxModel)
+                .event(IComponentEvent.onclick, function (ev) {
+                var v1 = _this.getValue(y);
+                var v2 = _this.getValue(z);
+                var v3 = v1 + v2;
+                // total.setValue( v3 );
+                console.log(v3);
+                total.setState('v3', v3);
+                // this.mydata.object.v3 = v3;
+                // total.componentReceiveProps({});
+                total.setValue(v3);
+            })
+                .render();
+            var total = SpaLib$1.component();
+            total.template("\n\t\t\t<input type=\"text\" value=\"{v3}\">\n\t\t\t")
+                .mobxModel(mobxModel)
+                .event(IComponentEvent.onmouseover, this.mydata.mover)
+                .render();
+            var repeater = new SpaRepeaterComponent(ToDoItem);
+            repeater.cssFile('../app/components/ToDoItem.css')
+                .handlers({
+                ondelete: function (v) {
+                    debugger;
+                    var newModel = _this.mydata.list.filter(function (el) { return el.id !== v.id; });
+                    _this.mydata.list = newModel;
+                    // repeater.setModel(newModel)
+                    repeater.remove(v.id);
+                }
+            })
+                .mobxModel(mobxModel);
+        };
+        return ListComponent;
+    }(SpaComponent));
 
     var HomeComponent = /** @class */ (function (_super) {
         __extends(HomeComponent, _super);
@@ -1573,6 +1748,8 @@ var roll = (function () {
         function HomeModule() {
             var homeComponent = new HomeComponent();
             SpaLib$1.addComponent('home', homeComponent);
+            var listComp = new ListComponent();
+            SpaLib$1.addComponent('list', listComp);
             // const repeater
         }
         return HomeModule;
