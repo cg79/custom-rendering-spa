@@ -82,8 +82,11 @@ export class ListComponent extends SpaComponent {
 			.event( IComponentEvent.onmouseover, this.mydata.mover )
 			.render();
 
+			// debugger;
 			const repeater = new SpaRepeaterComponent<ToDoItem>( ToDoItem )
-			repeater.cssFile( '../app/components/ToDoItem.css' )
+			repeater
+			.name('repeater')
+			.cssFile( '../app/components/ToDoItem.css' )
 				.handlers( {
 					ondelete: ( v ) => {
 						debugger;
@@ -94,6 +97,8 @@ export class ListComponent extends SpaComponent {
 					}
 	
 				} )
-				.mobxModel( mobxModel )
+				.setModel(this.mydata.list)
+				// .mobxModel( mobxModel )
+				.render();
 	}
 }

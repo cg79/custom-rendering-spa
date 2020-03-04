@@ -5,10 +5,10 @@ import { BaseSpaComponent } from "./BaseSpaComponent";
 import { SpaComponent } from "./SpaComponent";
 import { BaseSpaComposedComponent } from "./BaseSpaComposedComponent";
 
-export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends BaseSpaComponent {
-    render (): void {
-        throw new Error( "Method not implemented." );
-    }
+export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends SpaComponent {
+    // render (): void {
+    //     throw new Error( "Method not implemented." );
+    // }
 
     private nodes = {};
     constructor ( private testType: new () => T ) {
@@ -48,6 +48,8 @@ export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends Ba
 
             this.nodes[el.id] = node;
         } );
+
+        return this;
     }
 
     _parentTemplate = '';
