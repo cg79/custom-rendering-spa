@@ -1,3 +1,4 @@
+import { IMobxModel } from './../../src/services/IMobxModel';
 import { ToDoItem } from './ToDoItem';
 import { MobxService } from '../../src/services/MobxService';
 import { SpaComponent } from '../../src/components/SpaComponent';
@@ -29,6 +30,9 @@ export class HomeComponent extends BaseSpaComponent {
 	};
 
 	render () {
+		const mService = new MobxService();
+		const mobxModel: IMobxModel = mService.asObservable( this.mydata );
+		debugger;
 
 		var binding = SpaLib.component();
 			binding
@@ -41,16 +45,29 @@ export class HomeComponent extends BaseSpaComponent {
 				`)
 			.event(IComponentEvent.onchange, (ev) => {
 				debugger;
-			})
-			.event(IComponentEvent.onkeyup, (ev) => {
-				debugger;
 				const val = this.getEventValue(ev);
 				binding.setState('name', val + ' hello');
 			})
 			.subscribe('name', (newValue) => {
 				debugger;
 			})
-			.model( this.mydata )
+			.containerTemplate(
+				`
+					<div class="parent">
+					</div>
+            `)
+			.mobxModel( mobxModel )
+			.addComponent((comp) => {
+				comp.name('new 1')
+				.mobxModel(mobxModel)
+				.subscribe('name', (newValue) => {
+					debugger;
+					comp.componentReceiveProps({name: newValue});
+				})
+				.template(`
+					<label>{name}</label>
+				`)
+			})
 			.render();
 
 	}

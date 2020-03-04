@@ -937,7 +937,10 @@ var roll = (function () {
             this._proxy = proxy;
             this._observables = observables;
             this.object = proxy;
-            return proxy;
+            return {
+                object: proxy,
+                observables: observables,
+            };
         };
         MobxService.prototype.subscribe = function (property, valueChangedEvent) {
             // const props = listOfProperties.replace( / +/, '' ).split( ',' );
@@ -1088,7 +1091,11 @@ var roll = (function () {
             };
             this._name = '';
             this._mobx = null;
+            this._mobxModel = null;
+            this.components = [];
             this.mobxSubsribers = [];
+            this.stopTrigger = false;
+            this._containerTemplate = '';
             this.spaRenderer = new SpaRender();
         }
         BaseSpaComponent.prototype.name = function (val) {
@@ -1123,6 +1130,20 @@ var roll = (function () {
             this._model = state;
             return this;
         };
+        BaseSpaComponent.prototype.mobxModel = function (state) {
+            this._mobxModel = state;
+            return this;
+        };
+        BaseSpaComponent.prototype.addChildComponent = function (comp) {
+            return this;
+        };
+        BaseSpaComponent.prototype.addComponent = function (fn, thisArg) {
+            debugger;
+            var inst = new SpaComponent();
+            fn(inst);
+            this.components.push(inst);
+            return this;
+        };
         BaseSpaComponent.prototype.asObservable = function (obj) {
             var _a = observe(obj), observables = _a.observables, proxy = _a.proxy;
             this._proxy = proxy;
@@ -1138,14 +1159,16 @@ var roll = (function () {
             return this;
         };
         BaseSpaComponent.prototype.applySubscribers = function () {
-            var _this = this;
-            var _a = this, _mobx = _a._mobx, mobxSubsribers = _a.mobxSubsribers;
-            if (!_mobx) {
+            if (this.stopTrigger) {
+                return;
+            }
+            var _a = this, mobxSubsribers = _a.mobxSubsribers, _mobxModel = _a._mobxModel;
+            if (!_mobxModel) {
                 return;
             }
             mobxSubsribers.forEach(function (el) {
                 var property = el.property, valueChangedEvent = el.valueChangedEvent;
-                var obsProp = _this._observables[property];
+                var obsProp = _mobxModel.observables[property];
                 if (obsProp) {
                     obsProp.subscribe(function (value) {
                         // this.object[prop] = value;
@@ -1180,7 +1203,13 @@ var roll = (function () {
             return v ? parseInt(v) : 0;
         };
         BaseSpaComponent.prototype.setState = function (propName, value) {
-            this._model[propName] = value;
+            var m = this._mobxModel;
+            if (!m) {
+                return;
+            }
+            this.stopTrigger = true;
+            m.object[propName] = value;
+            this.stopTrigger = false;
         };
         BaseSpaComponent.prototype.insertCssFile = function () {
             if (!this._cssFile) {
@@ -1206,14 +1235,31 @@ var roll = (function () {
                 spaRenderer.assignChildNodeEv(node, ev, func);
             });
         };
-        BaseSpaComponent.prototype.render1 = function () {
-            var spaRenderer = this.spaRenderer;
+        BaseSpaComponent.prototype.getModel = function () {
+            return this._model || (this._mobxModel && this._mobxModel.object);
+        };
+        BaseSpaComponent.prototype.componentReceiveProps = function (newProps) {
+            if (!newProps) {
+                return;
+            }
+            this.stopTrigger = true;
+            this.refresh();
+            this.stopTrigger = false;
+        };
+        BaseSpaComponent.prototype.refresh = function () {
+            var model = this.getModel();
+            var h = this.spaRenderer.getHtml(this._template, model);
+            this.node.innerHTML = h;
+        };
+        BaseSpaComponent.prototype.renderLogic = function () {
+            var _a = this, spaRenderer = _a.spaRenderer, components = _a.components;
             var node = null;
+            var model = this.getModel();
             if (this._parentNode) {
-                node = spaRenderer.addChild(this._parentNode, this._template, this._model);
+                node = spaRenderer.addChild(this._parentNode, this._template, model);
             }
             else {
-                node = spaRenderer.insertElement('a', this._template, this._model);
+                node = spaRenderer.insertElement('a', this._template, model);
             }
             if (!node) {
                 return null;
@@ -1221,8 +1267,24 @@ var roll = (function () {
             this.node = node;
             this.insertCssFile();
             this.assignEvents(node);
-            this.applySubscribers();
             return node;
+        };
+        BaseSpaComponent.prototype.render1 = function () {
+            var _a = this, spaRenderer = _a.spaRenderer, components = _a.components;
+            var node = this.renderLogic();
+            this.applySubscribers();
+            if (components && components.length) {
+                var parentNode_1 = this.spaRenderer.addHmlChild(node, "\n\t\t\t<div>\n\t\t\t</div>\n            ");
+                components.forEach(function (comp) {
+                    comp.parentNode(parentNode_1);
+                    comp.render1();
+                });
+            }
+            return node;
+        };
+        BaseSpaComponent.prototype.containerTemplate = function (template) {
+            this._containerTemplate = template;
+            return this;
         };
         BaseSpaComponent.prototype.getEventValue = function (ev) {
             return ev.target ? ev.target.value : null;
@@ -1351,14 +1413,14 @@ var roll = (function () {
         }
         HomeComponent.prototype.render = function () {
             var _this = this;
+            var mService = new MobxService();
+            var mobxModel = mService.asObservable(this.mydata);
+            debugger;
             var binding = SpaLib$1.component();
             binding
                 .name('mobx test')
                 .template("\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t</div>\n\t\t\t\t")
                 .event(IComponentEvent.onchange, function (ev) {
-                debugger;
-            })
-                .event(IComponentEvent.onkeyup, function (ev) {
                 debugger;
                 var val = _this.getEventValue(ev);
                 binding.setState('name', val + ' hello');
@@ -1366,7 +1428,17 @@ var roll = (function () {
                 .subscribe('name', function (newValue) {
                 debugger;
             })
-                .model(this.mydata)
+                .containerTemplate("\n\t\t\t\t\t<div class=\"parent\">\n\t\t\t\t\t</div>\n            ")
+                .mobxModel(mobxModel)
+                .addComponent(function (comp) {
+                comp.name('new 1')
+                    .mobxModel(mobxModel)
+                    .subscribe('name', function (newValue) {
+                    debugger;
+                    comp.componentReceiveProps({ name: newValue });
+                })
+                    .template("\n\t\t\t\t\t<label>{name}</label>\n\t\t\t\t");
+            })
                 .render();
         };
         return HomeComponent;

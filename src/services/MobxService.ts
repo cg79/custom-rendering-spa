@@ -1,5 +1,6 @@
 
 import { observe } from 'rxjs-observe';
+import { IMobxModel } from './IMobxModel';
 
 export class MobxService {
   _proxy;
@@ -9,7 +10,7 @@ export class MobxService {
   state;
   component;
 
-  asObservable(obj) {
+  asObservable(obj): IMobxModel {
     const { observables, proxy } = observe( obj );
 
     this._proxy = proxy;
@@ -17,7 +18,10 @@ export class MobxService {
 
     this.object = proxy;
     
-    return proxy;
+    return {
+      object: proxy,
+      observables: observables,
+    }
   }
   
   subscribe ( property: string, valueChangedEvent: Function ) {

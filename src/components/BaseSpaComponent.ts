@@ -1,8 +1,10 @@
+import { SpaComponent } from './SpaComponent';
 import { MobxService } from './../services/MobxService';
 import { SpaRender } from "../rendering/SpaRender";
 import { IComponentEvent } from "./events/IComponentEvent";
 import { IEventType } from "./events/IEventType";
 import { observe } from 'rxjs-observe';
+import { IMobxModel } from '../services/IMobxModel';
 
 export abstract class BaseSpaComponent {
     protected spaRenderer: SpaRender;
@@ -38,7 +40,7 @@ export abstract class BaseSpaComponent {
 
     protected _name = '';
 
-    name(val: string) {
+    name ( val: string ) {
         this._name = val;
         return this;
     }
@@ -76,6 +78,29 @@ export abstract class BaseSpaComponent {
         return this;
     }
 
+    protected _mobxModel: IMobxModel| null = null; 
+    mobxModel ( state: IMobxModel ) {
+        this._mobxModel = state;
+        return this;
+    }
+
+    addChildComponent ( comp: BaseSpaComponent ) {
+        const aaa = () => {
+            debugger;
+        }
+
+        return this;
+    }
+
+    private components: Array<BaseSpaComponent> = [];
+    addComponent<T> ( fn: ( x: BaseSpaComponent ) => T, thisArg?: any ): BaseSpaComponent {
+        debugger;
+        const inst: BaseSpaComponent = new SpaComponent();
+        fn( inst );
+        this.components.push( inst );
+        return this;
+    }
+
     _proxy: any;
     _observables: any;
     asObservable ( obj: any ) {
@@ -100,15 +125,19 @@ export abstract class BaseSpaComponent {
     }
 
     private applySubscribers () {
-        const { _mobx, mobxSubsribers } = this;
-        if ( !_mobx ) {
+        if(this.stopTrigger) {
+            return;
+        }
+        const { mobxSubsribers, _mobxModel } = this;
+        
+        if(!_mobxModel) {
             return;
         }
 
         mobxSubsribers.forEach( el => {
             const { property, valueChangedEvent } = el;
 
-            const obsProp = this._observables[ property ];
+            const obsProp = _mobxModel.observables[ property ];
             if ( obsProp ) {
                 obsProp.subscribe( ( value: any ) => {
                     // this.object[prop] = value;
@@ -150,8 +179,15 @@ export abstract class BaseSpaComponent {
         return v ? parseInt( v ) : 0;
     }
 
+    private stopTrigger = false;
     setState ( propName: string, value: any ) {
-        this._model[ propName ] = value;
+        const m = this._mobxModel;
+        if(!m) {
+            return;
+        }
+        this.stopTrigger = true;
+        m.object[ propName ] = value;
+        this.stopTrigger = false;
     }
 
     abstract render (): void;
@@ -185,13 +221,32 @@ export abstract class BaseSpaComponent {
 
     }
 
-    protected render1 (): Node | null {
-        const { spaRenderer } = this;
+    protected getModel() {
+        return this._model || (this._mobxModel && this._mobxModel.object);
+    }
+
+    componentReceiveProps(newProps: any) {
+        if(!newProps) {
+            return;
+        }
+        this.stopTrigger = true;
+        this.refresh();
+        this.stopTrigger = false;  
+    }
+
+    private refresh() {
+        const model = this.getModel();
+        const h = this.spaRenderer.getHtml(this._template, model);
+        this.node.innerHTML = h;
+    }
+    private renderLogic(): Node | null {
+        const { spaRenderer, components } = this;
         let node = null;
+        const model = this.getModel();
         if ( this._parentNode ) {
-            node = spaRenderer.addChild( this._parentNode, this._template, this._model )
+            node = spaRenderer.addChild( this._parentNode, this._template, model );
         } else {
-            node = spaRenderer.insertElement( 'a', this._template, this._model )
+            node = spaRenderer.insertElement( 'a', this._template, model );
         }
 
         if ( !node ) {
@@ -204,11 +259,34 @@ export abstract class BaseSpaComponent {
 
         this.assignEvents( node );
 
+        return node;
+    }
+    protected render1 (): Node | null {
+        const { spaRenderer, components } = this;
+        const node =  this.renderLogic();
         this.applySubscribers();
+
+        if ( components && components.length ) {
+            const parentNode = this.spaRenderer.addHmlChild( node,
+                `
+			<div>
+			</div>
+            `);
+
+            components.forEach( comp => {
+                comp.parentNode( parentNode );
+                comp.render1();
+            } )
+        }
 
         return node;
     }
 
+    protected _containerTemplate: string = '';
+    containerTemplate ( template: string ) {
+        this._containerTemplate = template;
+        return this;
+    }
     getEventValue ( ev: Event ): string | null {
         return ev.target ? ev.target.value : null;
     }
