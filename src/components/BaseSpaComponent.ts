@@ -1,15 +1,15 @@
 import { SpaComponent } from './SpaComponent';
-import { MobxService } from './../services/MobxService';
 import { SpaRender } from "../rendering/SpaRender";
 import { IComponentEvent } from "./events/IComponentEvent";
 import { IEventType, IEventInfo } from "./events/IEventType";
 import { observe } from 'rxjs-observe';
 import { IMobxModel } from '../services/IMobxModel';
 
+// 
 export abstract class BaseSpaComponent {
-    protected spaRenderer: SpaRender;
 
-    protected _model: any;
+    data: any = null;
+    protected spaRenderer: SpaRender;
 
     protected _template = '';
 
@@ -26,7 +26,10 @@ export abstract class BaseSpaComponent {
     protected _handlers = {};
 
     protected _parentNode: Node | null = null;
-    constructor () {
+
+    private _calee: BaseSpaComponent;
+    constructor (callee: BaseSpaComponent = null) {
+        this._calee = callee;
         this.spaRenderer = new SpaRender();
     }
 
@@ -73,51 +76,44 @@ export abstract class BaseSpaComponent {
         return this;
     }
 
-    private _mobx: MobxService | null = null;
+    protected _model: any;
     model ( state: any ) {
-        this._mobx = new MobxService();
+        this._mobxModel = this.asObservable( state );
 
-        state = this.asObservable( state );
-        // this.render();
         this._model = state;
-        return this;
-    }
 
-    get modelValue() {
-        return this.getModel();
-    }
-    protected _mobxModel: IMobxModel | null = null;
-    mobxModel ( state: IMobxModel ) {
-        this._mobxModel = state;
-        return this;
-    }
-
-    addChildComponent ( comp: BaseSpaComponent ) {
-        const aaa = () => {
+        if(this._calee) {
+            this._calee.data = this._mobxModel.object;
+        } else {
             debugger;
         }
 
         return this;
     }
 
+    get modelValue () {
+        return this.getModel();
+    }
+    protected _mobxModel: IMobxModel | null = null;
+    // mobxModel ( state: IMobxModel ) {
+    //     this._mobxModel = state;
+    //     return this;
+    // }
+
     private components: Array<BaseSpaComponent> = [];
     addComponent<T> ( fn: ( x: BaseSpaComponent ) => T, thisArg?: any ): BaseSpaComponent {
-        debugger;
         const inst: BaseSpaComponent = new SpaComponent();
         fn( inst );
         this.components.push( inst );
         return this;
     }
 
-    _proxy: any;
-    _observables: any;
-    asObservable ( obj: any ) {
+    asObservable ( obj: any ): IMobxModel {
         const { observables, proxy } = observe( obj );
-
-        this._proxy = proxy;
-        this._observables = observables;
-
-        return proxy;
+        return {
+            object: proxy,
+            observables: observables,
+        }
     }
 
     private mobxSubsribers: Array<any> = [];
@@ -149,7 +145,6 @@ export abstract class BaseSpaComponent {
             if ( obsProp ) {
                 obsProp.subscribe( ( value: any ) => {
                     // this.object[prop] = value;
-                    debugger;
                     console.log( value );
                     valueChangedEvent( value );
 
@@ -175,7 +170,7 @@ export abstract class BaseSpaComponent {
         }
         this.node[ 'value' ] = val;
     }
-    getValue (node = this.node): string | null {
+    getValue ( node = this.node ): string | null {
         if ( !node ) {
             return null;
         }
@@ -200,11 +195,13 @@ export abstract class BaseSpaComponent {
 
     abstract render (): void;
 
+    abstract updateInterface(): void;
+    abstract updateNodeValue (node: Node, val: string): void;
+
     private insertCssFile () {
         if ( !this._cssFile ) {
             return;
         }
-        debugger;
         var head = document.getElementsByTagName( 'head' )[ 0 ];
 
         var style = document.createElement( 'link' );
@@ -214,9 +211,117 @@ export abstract class BaseSpaComponent {
         head.append( style );
 
     }
-    getHtml (): string {
-        this.insertCssFile();
-        return this.spaRenderer.getHtml( this._template, this._model );
+
+    private whatchedProperties: Array<string> | null = null;
+
+    protected propValues = {};
+
+    private parseTemplate(template: string) {
+        const result = {
+            
+        };
+        const props = template.match( /(\w+=\".*?\")/gi );
+        if(!props) {
+            return null;
+        }
+        let pValue = [];
+        let bindValue = '';
+        props.forEach(prop => {
+            pValue = prop.trim().split('=');
+            bindValue = pValue[1];
+            
+            if(bindValue.indexOf('{') > -1) {
+                bindValue = bindValue.replace(/"/g, '');
+                result[bindValue]  = pValue[0];
+            }
+            
+        });
+
+        return result;
+    }
+    private templateToHtmlText = ( template, data ) => {
+        // const props = template.match( /(\{)(.*?)(\})/gi );
+        debugger;
+        const props = this.parseTemplate(template);
+        if(!props) {
+            return template;
+        }
+        let wasEmpty = false;
+        if(!this.whatchedProperties) {
+            this.whatchedProperties = [];
+            wasEmpty = true;
+        }
+        var pName = '';
+        this.propValues = {};
+        let propValue = '';
+        debugger;
+
+        Object.keys(props).forEach( p => {
+            pName = p.replace( '{', '' ).replace( '}', '' );
+
+            propValue = data[ pName ];
+            this.propValues[p] = propValue;
+            template = template.replace( p,  propValue);
+
+            this.whatchedProperties.push(pName);
+        } )
+
+        const {_mobxModel: mobxModel} = this;
+
+        if(wasEmpty && mobxModel) {
+            let prop = '';
+            for(var i=0;i<this.whatchedProperties.length;i++) {
+                    
+                    prop = this.whatchedProperties[i];
+
+                    const obsProp = mobxModel.observables[ prop ];
+                    if ( obsProp ) {
+                        obsProp.subscribe( ( value: any ) => {
+                            // this.object[prop] = value;
+                            if(!this.rendered) {
+                                return;
+                            }
+                            console.log( value );
+
+                            this.refresh();
+        
+                        } )
+                    }
+        
+            }
+        }
+        return template;
+    }
+
+    private addChild = ( node: Node, template: string, data:any ): Node | null => {
+        this.data = data;
+        const htmlText = this.templateToHtmlText(template, data);
+        
+         node.insertAdjacentHTML( 'beforeend', htmlText );
+
+         const lastChild = node.lastChild;
+         if(!lastChild) {
+             return null;
+         }
+        return lastChild.previousSibling;
+    }
+
+    private insertElement = ( parentId: string, template: string, data:any ): Node | null => {
+        this.data = data;
+        const htmlText = this.templateToHtmlText(template, data);
+        
+        const parent = document.getElementById( parentId );
+        if(!parent) {
+            console.warn('no parent for ', parentId);
+            return null;
+        }
+         parent.insertAdjacentHTML( 'beforeend', htmlText );
+
+         const lastChild = parent.lastChild;
+         if(!lastChild) {
+             return null;
+         }
+        return lastChild.previousSibling;
     }
 
     protected assignEvents ( node: Node ) {
@@ -243,28 +348,21 @@ export abstract class BaseSpaComponent {
             const exec = ( el: Event, func: Function ) => {
                 const newValue = this.getEventValue( el );
                 func( newValue );
-                // this.refresh();
             };
 
-            debugger;
             if ( id ) {
-                const idValue = this.spaRenderer.textToHtmlText(id, this.getModel());
+                const idValue = this.spaRenderer.textToHtmlText( id, this.getModel() );
                 const idNOde = this.findElementById( htmlElement, idValue );
                 if ( idNOde ) {
                     htmlElement = idNOde;
                 }
             }
-            // htmlElement = document.getElementById( id );
-            // if ( !htmlElement ) {
-            //     throw new Error( `no html element for ${ id }` );
-            // }
+            
             htmlElement.addEventListener( evName, ( element ) => {
-                debugger;
                 exec( element, func );
             } );
 
             htmlElement[ evName ] = ( el ) => {
-                debugger;
                 exec( el, func );
             };
         }
@@ -293,41 +391,32 @@ export abstract class BaseSpaComponent {
             i++;
         }
         i = 0;
-        if(!result) {
+        if ( !result ) {
             while ( i < childNodes.length && !result ) {
-                result = this.findElementById(childNodes[i], id)
+                result = this.findElementById( childNodes[ i ], id )
                 i++;
-            }   
+            }
         }
         return result;
     }
 
     protected getModel () {
-        return this._model || ( this._mobxModel && this._mobxModel.object );
-    }
-
-    componentReceiveProps ( newProps: any ) {
-        if ( !newProps ) {
-            return;
-        }
-        this.stopTrigger = true;
-        this.refresh();
-        this.stopTrigger = false;
+        return ( this._mobxModel && this._mobxModel.object ) || this._model;
     }
 
     private refresh () {
-        const {node, components} = this;
+        const { node, components } = this;
         const model = this.getModel();
-        const h = this.spaRenderer.getHtml( this._template, model );
-        // if(node.type === 'text') {
-        //     node.value = 
-        // }
-        node.innerHTML = h;
+        const h = this.templateToHtmlText(this._template, model);
+        // const h = this.spaRenderer.getHtml( this._template, model );
+       
+        this.updateNodeValue(node, h);
+        // node.innerHTML = h;
         this.assignEvents( node );
-        this.insertCssFile();
+        // this.insertCssFile();
 
         if ( components && components.length ) {
-            
+
             components.forEach( comp => {
                 // comp.parentNode( parentNode );
                 comp.render1();
@@ -336,13 +425,13 @@ export abstract class BaseSpaComponent {
 
     }
     private renderLogic (): Node | null {
-        const { spaRenderer, components } = this;
+        const { components } = this;
         let node = null;
         const model = this.getModel();
         if ( this._parentNode ) {
-            node = spaRenderer.addChild( this._parentNode, this._template, model );
+            node = this.addChild( this._parentNode, this._template, model );
         } else {
-            node = spaRenderer.insertElement( 'a', this._template, model );
+            node = this.insertElement( 'a', this._template, model );
         }
 
         if ( !node ) {
@@ -354,11 +443,13 @@ export abstract class BaseSpaComponent {
         this.insertCssFile();
 
         this.assignEvents( node );
-        
+
         return node;
     }
+
+    rendered = false;
     protected render1 (): Node | null {
-        const { spaRenderer, components } = this;
+        const { components } = this;
         const node = this.renderLogic();
         this.applySubscribers();
 
@@ -375,6 +466,7 @@ export abstract class BaseSpaComponent {
             } )
         }
 
+        this.rendered = true;
         return node;
     }
 

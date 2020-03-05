@@ -2,6 +2,7 @@ import { SpaComponent } from './components/SpaComponent';
 import { SpaPage } from './page/SpaPage';
 import { SpaView } from './view/SpaView';
 import { SpaRender } from './rendering/SpaRender';
+import { BaseSpaComponent } from './components/BaseSpaComponent';
 
 class SpaLib {
 
@@ -18,6 +19,7 @@ class SpaLib {
     return new SpaView({});
   }
   
+
   component(): SpaComponent {
     return new SpaComponent();
   }

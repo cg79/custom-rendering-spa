@@ -1,4 +1,3 @@
-'use strict';
 
 import 'rollup';
 import typescript from 'rollup-plugin-typescript';

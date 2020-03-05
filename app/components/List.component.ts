@@ -6,10 +6,11 @@ import SpaLib from '../../src/SpaLib';
 import { IComponentEvent } from '../../src/components/events/IComponentEvent';
 import { IMobxModel } from '../../src/services/IMobxModel';
 import { ToDoItem } from './ToDoItem';
+import { SpaTextBox } from './SpaTextBox';
 
 export class ListComponent extends SpaComponent {
 
-	mydata = {
+	data = {
 		id: 'xxx',
 		id1: 'yyy',
 		btnFunc: ( v1, v2 ) => {
@@ -17,88 +18,87 @@ export class ListComponent extends SpaComponent {
 
 			return v1 + v2;
 		},
-		v3: 0,
+		v1: '',
+		v2: '',
+		v3: '',
 		mover: ( val, v2 ) => {
-			debugger;
 			console.log( val );
 		},
 		list: [ { id: '1a', name: 'john' }, { id: '2a', name: 'ionela' } ],
-		text: "hello dinamic button"
+		text: "hello dinamic button",
+		v3class: ''
 	};
 
 	render () {
 
-		const mService = new MobxService();
-		const mobxModel: IMobxModel = mService.asObservable( this.mydata );
-
-		var y = SpaLib.component()
+		var y = new SpaTextBox( this )
+			.id( 't1' )
+			.prop( 'v1' )
 			.template(
 				`
-			<input type="text">
+			<input type="text" value="{v1}">
 			`)
-			.mobxModel( mobxModel )
-			.event( IComponentEvent.onmouseover, this.mydata.mover )
+			.model( this.data )
+			// .event( IComponentEvent.onmouseover, this.data.mover )
 			.render();
 
-		var z = SpaLib.component()
+		var z = new SpaTextBox( this )
+			.id( 't2' )
+			.prop( 'v2' )
 			.template(
 				`
-			<input type="text">
+			<input type="text" value="{v2}">
 			`)
-			.mobxModel( mobxModel )
+			.model( this.data )
 			.render();
 
-		var x = SpaLib.component()
-			.template(
-				`
+		var x = new SpaComponent( this );
+		x.template(
+			`
 				<button>{id1}</button>
 			`)
-			.mobxModel( mobxModel )
+			.model( this.data )
 			.event( IComponentEvent.onclick, ( ev ) => {
-				var v1 = this.getValue(y);
-				var v2 = this.getValue(z);
+				// var v1 = this.getValue(y);
+				// var v2 = this.getValue(z);
 
-				var v3 = v1 + v2;
+				// var v3 = v1 + v2;
 
-				// total.setValue( v3 );
-				console.log( v3 );
+				// console.log( v3 );
 
-				total.setState( 'v3', v3 );
+				// total.setState( 'v3', v3 );
 
-				// this.mydata.object.v3 = v3;
+				// total.setValue(v3);
 
-				// total.componentReceiveProps({});
-				total.setValue(v3);
+				this.data.v3 = this.data.v1 + this.data.v2;
+				this.data.v3class = this.guid();
 
 			} )
 			.render();
 
-		var total = SpaLib.component();
-			total.template(
-				`
-			<input type="text" value="{v3}">
+		var total = new SpaTextBox( this );
+		total.template(
+			`
+			<input type="text" value="{v3}" class="{v3class}">
 			`)
-			.mobxModel( mobxModel )
-			.event( IComponentEvent.onmouseover, this.mydata.mover )
+			.model( this.data )
+
+			// .event( IComponentEvent.onmouseover, this.data.mover )
 			.render();
 
-			// debugger;
-			const repeater = new SpaRepeaterComponent<ToDoItem>( ToDoItem )
-			repeater
-			.name('repeater')
+		const repeater = new SpaRepeaterComponent<ToDoItem>( ToDoItem )
+		repeater
+			.name( 'repeater' )
 			.cssFile( '../app/components/ToDoItem.css' )
-				.handlers( {
-					ondelete: ( v ) => {
-						debugger;
-						const newModel = this.mydata.list.filter( el => el.id !== v.id );
-						this.mydata.list = newModel;
-						// repeater.setModel(newModel)
-						repeater.remove( v.id );
-					}
-	
-				} )
-				.setModel(this.mydata.list)
-				// .mobxModel( mobxModel )
-				.render();
+			.handlers( {
+				ondelete: ( v ) => {
+					const newModel = this.data.list.filter( el => el.id !== v.id );
+					this.data.list = newModel;
+					repeater.remove( v.id );
+				}
+
+			} )
+			.setModel( this.data.list )
+			.render();
 	}
 }

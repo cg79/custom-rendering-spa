@@ -30,6 +30,122 @@ var roll = (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
+    var SpaRender = /** @class */ (function () {
+        function SpaRender() {
+            var _this = this;
+            this.data = null;
+            this.textToHtmlText = function (text, data) {
+                var props = text.match(/(\{)(.*?)(\})/gi);
+                if (!props) {
+                    return text;
+                }
+                var pName = '';
+                props.forEach(function (p) {
+                    pName = p.replace('{', '').replace('}', '');
+                    text = text.replace(p, data[pName]);
+                });
+                return text;
+            };
+            this.insertHtml = function (parentId, html) {
+                var parent = document.getElementById(parentId);
+                if (!parent) {
+                    console.warn('no parent for ', parentId);
+                    return null;
+                }
+                parent.insertAdjacentHTML('beforeend', html);
+                var lastChild = parent.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.addHmlChild = function (node, htmlText) {
+                if (!node) {
+                    throw new Error('no node parent');
+                }
+                node.insertAdjacentHTML('beforeend', htmlText);
+                var lastChild = node.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.addChild = function (node, template, data) {
+                _this.data = data;
+                var htmlText = _this.getHtml(template, data);
+                node.insertAdjacentHTML('beforeend', htmlText);
+                var lastChild = node.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.insertElement = function (parentId, template, data) {
+                _this.data = data;
+                var htmlText = _this.getHtml(template, data);
+                var parent = document.getElementById(parentId);
+                if (!parent) {
+                    console.warn('no parent for ', parentId);
+                    return null;
+                }
+                parent.insertAdjacentHTML('beforeend', htmlText);
+                var lastChild = parent.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.assignEv = function (id, evName, func) {
+                var htmlElement = null;
+                var exec = function (el) { return func(el, id); };
+                htmlElement = document.getElementById(id);
+                if (!htmlElement) {
+                    throw new Error("no html element for " + id);
+                }
+                htmlElement.addEventListener(evName, function (element) {
+                    exec(element);
+                });
+                return _this;
+            };
+            this.assignChildNodeEv = function (childNode, evName, func) {
+                var exec = function (el) { func(el); };
+                // htmlElement = document.getElementById( id );
+                // if ( !htmlElement ) {
+                //     throw new Error( `no html element for ${ id }` );
+                // }
+                childNode.addEventListener(evName, function (element) {
+                    exec(element);
+                });
+                childNode[evName] = function (el) {
+                    exec(el);
+                };
+                return _this;
+            };
+            this.mapClass = function (id, orig, propName) {
+                var htmlElement = null;
+                htmlElement = document.getElementById(id);
+                if (!htmlElement) {
+                    throw new Error("no html element for " + id);
+                }
+                htmlElement.setAttribute("class", orig + " " + _this.data[propName]);
+                return _this;
+            };
+        }
+        // getPropValue(propName) {
+        // }
+        SpaRender.prototype.getHtml = function (template, data) {
+            return data ? this.textToHtmlText(template, data) : template;
+        };
+        SpaRender.prototype.removeElement = function (id) {
+            var htmlElement = document.getElementById(id);
+            if (!htmlElement) {
+                throw new Error("no html element for " + id);
+            }
+            return htmlElement.parentNode.removeChild(htmlElement);
+        };
+        return SpaRender;
+    }());
+
     /** PURE_IMPORTS_START  PURE_IMPORTS_END */
     function isFunction(x) {
         return typeof x === 'function';
@@ -929,156 +1045,12 @@ var roll = (function () {
         };
     }
 
-    var MobxService = /** @class */ (function () {
-        function MobxService() {
-        }
-        MobxService.prototype.asObservable = function (obj) {
-            var _a = observe(obj), observables = _a.observables, proxy = _a.proxy;
-            this._proxy = proxy;
-            this._observables = observables;
-            this.object = proxy;
-            return {
-                object: proxy,
-                observables: observables,
-            };
-        };
-        MobxService.prototype.subscribe = function (property, valueChangedEvent) {
-            // const props = listOfProperties.replace( / +/, '' ).split( ',' );
-            // props.forEach( (prop: string) => {
-            var obsProp = this._observables[property];
-            if (obsProp) {
-                obsProp.subscribe(function (value) {
-                    // this.object[prop] = value;
-                    debugger;
-                    console.log(value);
-                    valueChangedEvent(value);
-                });
-            }
-            // } )
-            return this;
-        };
-        return MobxService;
-    }());
-
-    var SpaRender = /** @class */ (function () {
-        function SpaRender() {
-            var _this = this;
-            this.data = null;
-            this.textToHtmlText = function (text, data) {
-                var props = text.match(/(\{)(.*?)(\})/gi);
-                if (!props) {
-                    return text;
-                }
-                var pName = '';
-                props.forEach(function (p) {
-                    pName = p.replace('{', '').replace('}', '');
-                    text = text.replace(p, data[pName]);
-                });
-                return text;
-            };
-            this.insertHtml = function (parentId, html) {
-                var parent = document.getElementById(parentId);
-                if (!parent) {
-                    console.warn('no parent for ', parentId);
-                    return null;
-                }
-                parent.insertAdjacentHTML('beforeend', html);
-                var lastChild = parent.lastChild;
-                if (!lastChild) {
-                    return null;
-                }
-                return lastChild.previousSibling;
-            };
-            this.addHmlChild = function (node, htmlText) {
-                if (!node) {
-                    throw new Error('no node parent');
-                }
-                node.insertAdjacentHTML('beforeend', htmlText);
-                var lastChild = node.lastChild;
-                if (!lastChild) {
-                    return null;
-                }
-                return lastChild.previousSibling;
-            };
-            this.addChild = function (node, template, data) {
-                _this.data = data;
-                var htmlText = _this.getHtml(template, data);
-                node.insertAdjacentHTML('beforeend', htmlText);
-                var lastChild = node.lastChild;
-                if (!lastChild) {
-                    return null;
-                }
-                return lastChild.previousSibling;
-            };
-            this.insertElement = function (parentId, template, data) {
-                _this.data = data;
-                var htmlText = _this.getHtml(template, data);
-                var parent = document.getElementById(parentId);
-                if (!parent) {
-                    console.warn('no parent for ', parentId);
-                    return null;
-                }
-                parent.insertAdjacentHTML('beforeend', htmlText);
-                var lastChild = parent.lastChild;
-                if (!lastChild) {
-                    return null;
-                }
-                return lastChild.previousSibling;
-            };
-            this.assignEv = function (id, evName, func) {
-                var htmlElement = null;
-                var exec = function (el) { return func(el, id); };
-                htmlElement = document.getElementById(id);
-                if (!htmlElement) {
-                    throw new Error("no html element for " + id);
-                }
-                htmlElement.addEventListener(evName, function (element) {
-                    exec(element);
-                });
-                return _this;
-            };
-            this.assignChildNodeEv = function (childNode, evName, func) {
-                var exec = function (el) { func(el); };
-                // htmlElement = document.getElementById( id );
-                // if ( !htmlElement ) {
-                //     throw new Error( `no html element for ${ id }` );
-                // }
-                childNode.addEventListener(evName, function (element) {
-                    exec(element);
-                });
-                childNode[evName] = function (el) {
-                    exec(el);
-                };
-                return _this;
-            };
-            this.mapClass = function (id, orig, propName) {
-                var htmlElement = null;
-                htmlElement = document.getElementById(id);
-                if (!htmlElement) {
-                    throw new Error("no html element for " + id);
-                }
-                htmlElement.setAttribute("class", orig + " " + _this.data[propName]);
-                return _this;
-            };
-        }
-        // getPropValue(propName) {
-        // }
-        SpaRender.prototype.getHtml = function (template, data) {
-            return data ? this.textToHtmlText(template, data) : template;
-        };
-        SpaRender.prototype.removeElement = function (id) {
-            var htmlElement = document.getElementById(id);
-            if (!htmlElement) {
-                throw new Error("no html element for " + id);
-            }
-            return htmlElement.parentNode.removeChild(htmlElement);
-        };
-        return SpaRender;
-    }());
-
+    // 
     var BaseSpaComponent = /** @class */ (function () {
-        function BaseSpaComponent() {
+        function BaseSpaComponent(callee) {
             var _this = this;
+            if (callee === void 0) { callee = null; }
+            this.data = null;
             this._template = '';
             this.node = null;
             this.events = {};
@@ -1093,11 +1065,84 @@ var roll = (function () {
                 return (S4() + S4() + "-" + S4() + "-4" + S4().substr(0, 3) + "-" + S4() + "-" + S4() + S4() + S4()).toLowerCase();
             };
             this._name = '';
-            this._mobx = null;
             this._mobxModel = null;
+            // mobxModel ( state: IMobxModel ) {
+            //     this._mobxModel = state;
+            //     return this;
+            // }
             this.components = [];
             this.mobxSubsribers = [];
             this.stopTrigger = false;
+            this.whatchedProperties = null;
+            this.propValues = {};
+            this.templateToHtmlText = function (template, data) {
+                // const props = template.match( /(\{)(.*?)(\})/gi );
+                debugger;
+                var props = _this.parseTemplate(template);
+                if (!props) {
+                    return template;
+                }
+                var wasEmpty = false;
+                if (!_this.whatchedProperties) {
+                    _this.whatchedProperties = [];
+                    wasEmpty = true;
+                }
+                var pName = '';
+                _this.propValues = {};
+                var propValue = '';
+                debugger;
+                Object.keys(props).forEach(function (p) {
+                    pName = p.replace('{', '').replace('}', '');
+                    propValue = data[pName];
+                    _this.propValues[p] = propValue;
+                    template = template.replace(p, propValue);
+                    _this.whatchedProperties.push(pName);
+                });
+                var mobxModel = _this._mobxModel;
+                if (wasEmpty && mobxModel) {
+                    var prop = '';
+                    for (var i = 0; i < _this.whatchedProperties.length; i++) {
+                        prop = _this.whatchedProperties[i];
+                        var obsProp = mobxModel.observables[prop];
+                        if (obsProp) {
+                            obsProp.subscribe(function (value) {
+                                // this.object[prop] = value;
+                                if (!_this.rendered) {
+                                    return;
+                                }
+                                console.log(value);
+                                _this.refresh();
+                            });
+                        }
+                    }
+                }
+                return template;
+            };
+            this.addChild = function (node, template, data) {
+                _this.data = data;
+                var htmlText = _this.templateToHtmlText(template, data);
+                node.insertAdjacentHTML('beforeend', htmlText);
+                var lastChild = node.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
+            this.insertElement = function (parentId, template, data) {
+                _this.data = data;
+                var htmlText = _this.templateToHtmlText(template, data);
+                var parent = document.getElementById(parentId);
+                if (!parent) {
+                    console.warn('no parent for ', parentId);
+                    return null;
+                }
+                parent.insertAdjacentHTML('beforeend', htmlText);
+                var lastChild = parent.lastChild;
+                if (!lastChild) {
+                    return null;
+                }
+                return lastChild.previousSibling;
+            };
             this.assignChildNodeEv = function (childNode, evName, evInfoArray) {
                 var evInfo = null;
                 var _loop_1 = function (i) {
@@ -1107,9 +1152,7 @@ var roll = (function () {
                     var exec = function (el, func) {
                         var newValue = _this.getEventValue(el);
                         func(newValue);
-                        // this.refresh();
                     };
-                    debugger;
                     if (id) {
                         var idValue = _this.spaRenderer.textToHtmlText(id, _this.getModel());
                         var idNOde = _this.findElementById(htmlElement, idValue);
@@ -1117,16 +1160,10 @@ var roll = (function () {
                             htmlElement = idNOde;
                         }
                     }
-                    // htmlElement = document.getElementById( id );
-                    // if ( !htmlElement ) {
-                    //     throw new Error( `no html element for ${ id }` );
-                    // }
                     htmlElement.addEventListener(evName, function (element) {
-                        debugger;
                         exec(element, func);
                     });
                     htmlElement[evName] = function (el) {
-                        debugger;
                         exec(el, func);
                     };
                 };
@@ -1135,7 +1172,9 @@ var roll = (function () {
                 }
                 return _this;
             };
+            this.rendered = false;
             this._containerTemplate = '';
+            this._calee = callee;
             this.spaRenderer = new SpaRender();
         }
         BaseSpaComponent.prototype.name = function (val) {
@@ -1171,10 +1210,14 @@ var roll = (function () {
             return this;
         };
         BaseSpaComponent.prototype.model = function (state) {
-            this._mobx = new MobxService();
-            state = this.asObservable(state);
-            // this.render();
+            this._mobxModel = this.asObservable(state);
             this._model = state;
+            if (this._calee) {
+                this._calee.data = this._mobxModel.object;
+            }
+            else {
+                debugger;
+            }
             return this;
         };
         Object.defineProperty(BaseSpaComponent.prototype, "modelValue", {
@@ -1184,15 +1227,7 @@ var roll = (function () {
             enumerable: true,
             configurable: true
         });
-        BaseSpaComponent.prototype.mobxModel = function (state) {
-            this._mobxModel = state;
-            return this;
-        };
-        BaseSpaComponent.prototype.addChildComponent = function (comp) {
-            return this;
-        };
         BaseSpaComponent.prototype.addComponent = function (fn, thisArg) {
-            debugger;
             var inst = new SpaComponent();
             fn(inst);
             this.components.push(inst);
@@ -1200,9 +1235,10 @@ var roll = (function () {
         };
         BaseSpaComponent.prototype.asObservable = function (obj) {
             var _a = observe(obj), observables = _a.observables, proxy = _a.proxy;
-            this._proxy = proxy;
-            this._observables = observables;
-            return proxy;
+            return {
+                object: proxy,
+                observables: observables,
+            };
         };
         BaseSpaComponent.prototype.subscribe = function (property, valueChangedEvent) {
             var v = {
@@ -1226,7 +1262,6 @@ var roll = (function () {
                 if (obsProp) {
                     obsProp.subscribe(function (value) {
                         // this.object[prop] = value;
-                        debugger;
                         console.log(value);
                         valueChangedEvent(value);
                     });
@@ -1270,7 +1305,6 @@ var roll = (function () {
             if (!this._cssFile) {
                 return;
             }
-            debugger;
             var head = document.getElementsByTagName('head')[0];
             var style = document.createElement('link');
             style.href = this._cssFile;
@@ -1278,9 +1312,23 @@ var roll = (function () {
             style.rel = 'stylesheet';
             head.append(style);
         };
-        BaseSpaComponent.prototype.getHtml = function () {
-            this.insertCssFile();
-            return this.spaRenderer.getHtml(this._template, this._model);
+        BaseSpaComponent.prototype.parseTemplate = function (template) {
+            var result = {};
+            var props = template.match(/(\w+=\".*?\")/gi);
+            if (!props) {
+                return null;
+            }
+            var pValue = [];
+            var bindValue = '';
+            props.forEach(function (prop) {
+                pValue = prop.trim().split('=');
+                bindValue = pValue[1];
+                if (bindValue.indexOf('{') > -1) {
+                    bindValue = bindValue.replace(/"/g, '');
+                    result[bindValue] = pValue[0];
+                }
+            });
+            return result;
         };
         BaseSpaComponent.prototype.assignEvents = function (node) {
             var _this = this;
@@ -1323,26 +1371,17 @@ var roll = (function () {
             return result;
         };
         BaseSpaComponent.prototype.getModel = function () {
-            return this._model || (this._mobxModel && this._mobxModel.object);
-        };
-        BaseSpaComponent.prototype.componentReceiveProps = function (newProps) {
-            if (!newProps) {
-                return;
-            }
-            this.stopTrigger = true;
-            this.refresh();
-            this.stopTrigger = false;
+            return (this._mobxModel && this._mobxModel.object) || this._model;
         };
         BaseSpaComponent.prototype.refresh = function () {
             var _a = this, node = _a.node, components = _a.components;
             var model = this.getModel();
-            var h = this.spaRenderer.getHtml(this._template, model);
-            // if(node.type === 'text') {
-            //     node.value = 
-            // }
-            node.innerHTML = h;
+            var h = this.templateToHtmlText(this._template, model);
+            // const h = this.spaRenderer.getHtml( this._template, model );
+            this.updateNodeValue(node, h);
+            // node.innerHTML = h;
             this.assignEvents(node);
-            this.insertCssFile();
+            // this.insertCssFile();
             if (components && components.length) {
                 components.forEach(function (comp) {
                     // comp.parentNode( parentNode );
@@ -1351,14 +1390,14 @@ var roll = (function () {
             }
         };
         BaseSpaComponent.prototype.renderLogic = function () {
-            var _a = this, spaRenderer = _a.spaRenderer, components = _a.components;
+            var components = this.components;
             var node = null;
             var model = this.getModel();
             if (this._parentNode) {
-                node = spaRenderer.addChild(this._parentNode, this._template, model);
+                node = this.addChild(this._parentNode, this._template, model);
             }
             else {
-                node = spaRenderer.insertElement('a', this._template, model);
+                node = this.insertElement('a', this._template, model);
             }
             if (!node) {
                 return null;
@@ -1369,7 +1408,7 @@ var roll = (function () {
             return node;
         };
         BaseSpaComponent.prototype.render1 = function () {
-            var _a = this, spaRenderer = _a.spaRenderer, components = _a.components;
+            var components = this.components;
             var node = this.renderLogic();
             this.applySubscribers();
             if (components && components.length) {
@@ -1379,6 +1418,7 @@ var roll = (function () {
                     comp.render1();
                 });
             }
+            this.rendered = true;
             return node;
         };
         BaseSpaComponent.prototype.containerTemplate = function (template) {
@@ -1413,6 +1453,14 @@ var roll = (function () {
         function SpaComponent() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
+        SpaComponent.prototype.updateInterface = function () {
+        };
+        SpaComponent.prototype.updateNodeValue = function (node, val) {
+            if (!node) {
+                return;
+            }
+            node.innerHTML = val;
+        };
         SpaComponent.prototype.render = function () {
             return this.render1();
             // const {events, spaRenderer} = this;
@@ -1481,38 +1529,6 @@ var roll = (function () {
         return SpaRepeaterComponent;
     }(SpaComponent));
 
-    // import { SpaLabel } from './components/SpaLabel';
-    var SpaView = /** @class */ (function () {
-        function SpaView(model) {
-            this.model = model;
-            // this.renderer = new SpaRender();
-        }
-        SpaView.prototype.render = function () {
-            return "j";
-        };
-        return SpaView;
-    }());
-
-    var SpaLib = /** @class */ (function () {
-        function SpaLib() {
-            this.components = {};
-            window['spalib'] = this;
-            // this.page = new SpaPage();
-            this.spaRenderer = new SpaRender();
-        }
-        SpaLib.prototype.includeView = function () {
-            return new SpaView({});
-        };
-        SpaLib.prototype.component = function () {
-            return new SpaComponent();
-        };
-        SpaLib.prototype.addComponent = function (name, component) {
-            this.components[name] = component;
-        };
-        return SpaLib;
-    }());
-    var SpaLib$1 = new SpaLib();
-
     var IComponentEvent;
     (function (IComponentEvent) {
         IComponentEvent["oncopy"] = "oncopy";
@@ -1549,6 +1565,38 @@ var roll = (function () {
         IComponentEvent["onmousewheel"] = "onmousewheel";
     })(IComponentEvent || (IComponentEvent = {}));
 
+    // import { SpaLabel } from './components/SpaLabel';
+    var SpaView = /** @class */ (function () {
+        function SpaView(model) {
+            this.model = model;
+            // this.renderer = new SpaRender();
+        }
+        SpaView.prototype.render = function () {
+            return "j";
+        };
+        return SpaView;
+    }());
+
+    var SpaLib = /** @class */ (function () {
+        function SpaLib() {
+            this.components = {};
+            window['spalib'] = this;
+            // this.page = new SpaPage();
+            this.spaRenderer = new SpaRender();
+        }
+        SpaLib.prototype.includeView = function () {
+            return new SpaView({});
+        };
+        SpaLib.prototype.component = function () {
+            return new SpaComponent();
+        };
+        SpaLib.prototype.addComponent = function (name, component) {
+            this.components[name] = component;
+        };
+        return SpaLib;
+    }());
+    var SpaLib$1 = new SpaLib();
+
     var BaseSpaComposedComponent = /** @class */ (function (_super) {
         __extends(BaseSpaComposedComponent, _super);
         function BaseSpaComposedComponent() {
@@ -1568,13 +1616,17 @@ var roll = (function () {
             _this._html = '';
             return _this;
         }
+        ToDoItem.prototype.updateInterface = function () {
+            // throw new Error( "Method not implemented." );
+        };
+        ToDoItem.prototype.updateNodeValue = function (node, val) {
+            // throw new Error( "Method not implemented." );
+        };
         ToDoItem.prototype.render = function () {
             // const node = this.spaRenderer.insertHtml('a', this._html);
-            debugger;
         };
         ToDoItem.prototype.triggerRender = function () {
             var _this = this;
-            debugger;
             var y = SpaLib$1.component();
             var h1Node = y.template("\n\t\t\t\n\t\t\t\t<div class=\"todo\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t</div>\n\t\t\t")
                 .cssFile(this._cssFile)
@@ -1586,7 +1638,6 @@ var roll = (function () {
                 .handlers(this._handlers)
                 .parentNode(this._parentNode)
                 .event(IComponentEvent.onclick, function (ev) {
-                debugger;
                 var v1 = y.asInt();
                 console.log(v1);
                 _this._handlers['ondelete'](_this._model);
@@ -1600,76 +1651,113 @@ var roll = (function () {
         return ToDoItem;
     }(BaseSpaComposedComponent));
 
+    var SpaTextBox = /** @class */ (function (_super) {
+        __extends(SpaTextBox, _super);
+        function SpaTextBox() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._id = '';
+            _this.propName = '';
+            return _this;
+        }
+        SpaTextBox.prototype.id = function (idVal) {
+            this._id = idVal;
+            return this;
+        };
+        SpaTextBox.prototype.updateInterface = function () {
+        };
+        SpaTextBox.prototype.updateNodeValue = function (node, val) {
+            if (!node) {
+                return;
+            }
+            debugger;
+            var a = this.propValues;
+            node.outerHTML = val;
+        };
+        SpaTextBox.prototype.prop = function (prop) {
+            this.propName = prop;
+            return this;
+        };
+        SpaTextBox.prototype.render = function () {
+            var _this = this;
+            this.event(IComponentEvent.onchange, function () {
+                _this.data[_this.propName] = _this.getValue();
+            });
+            // const mService = new MobxService();
+            // const mobxModel: IMobxModel = mService.asObservable( this.mydata );
+            _super.prototype.render1.call(this);
+        };
+        return SpaTextBox;
+    }(BaseSpaComponent));
+
     var ListComponent = /** @class */ (function (_super) {
         __extends(ListComponent, _super);
         function ListComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.mydata = {
+            _this.data = {
                 id: 'xxx',
                 id1: 'yyy',
                 btnFunc: function (v1, v2) {
                     console.log(v1, v2);
                     return v1 + v2;
                 },
-                v3: 0,
+                v1: '',
+                v2: '',
+                v3: '',
                 mover: function (val, v2) {
-                    debugger;
                     console.log(val);
                 },
                 list: [{ id: '1a', name: 'john' }, { id: '2a', name: 'ionela' }],
-                text: "hello dinamic button"
+                text: "hello dinamic button",
+                v3class: ''
             };
             return _this;
         }
         ListComponent.prototype.render = function () {
             var _this = this;
-            var mService = new MobxService();
-            var mobxModel = mService.asObservable(this.mydata);
-            var y = SpaLib$1.component()
-                .template("\n\t\t\t<input type=\"text\">\n\t\t\t")
-                .mobxModel(mobxModel)
-                .event(IComponentEvent.onmouseover, this.mydata.mover)
+            var y = new SpaTextBox(this)
+                .id('t1')
+                .prop('v1')
+                .template("\n\t\t\t<input type=\"text\" value=\"{v1}\">\n\t\t\t")
+                .model(this.data)
+                // .event( IComponentEvent.onmouseover, this.data.mover )
                 .render();
-            var z = SpaLib$1.component()
-                .template("\n\t\t\t<input type=\"text\">\n\t\t\t")
-                .mobxModel(mobxModel)
+            var z = new SpaTextBox(this)
+                .id('t2')
+                .prop('v2')
+                .template("\n\t\t\t<input type=\"text\" value=\"{v2}\">\n\t\t\t")
+                .model(this.data)
                 .render();
-            var x = SpaLib$1.component()
-                .template("\n\t\t\t\t<button>{id1}</button>\n\t\t\t")
-                .mobxModel(mobxModel)
+            var x = new SpaComponent(this);
+            x.template("\n\t\t\t\t<button>{id1}</button>\n\t\t\t")
+                .model(this.data)
                 .event(IComponentEvent.onclick, function (ev) {
-                var v1 = _this.getValue(y);
-                var v2 = _this.getValue(z);
-                var v3 = v1 + v2;
-                // total.setValue( v3 );
-                console.log(v3);
-                total.setState('v3', v3);
-                // this.mydata.object.v3 = v3;
-                // total.componentReceiveProps({});
-                total.setValue(v3);
+                // var v1 = this.getValue(y);
+                // var v2 = this.getValue(z);
+                // var v3 = v1 + v2;
+                // console.log( v3 );
+                // total.setState( 'v3', v3 );
+                // total.setValue(v3);
+                _this.data.v3 = _this.data.v1 + _this.data.v2;
+                _this.data.v3class = _this.guid();
             })
                 .render();
-            var total = SpaLib$1.component();
-            total.template("\n\t\t\t<input type=\"text\" value=\"{v3}\">\n\t\t\t")
-                .mobxModel(mobxModel)
-                .event(IComponentEvent.onmouseover, this.mydata.mover)
+            var total = new SpaTextBox(this);
+            total.template("\n\t\t\t<input type=\"text\" value=\"{v3}\" class=\"{v3class}\">\n\t\t\t")
+                .model(this.data)
+                // .event( IComponentEvent.onmouseover, this.data.mover )
                 .render();
-            // debugger;
             var repeater = new SpaRepeaterComponent(ToDoItem);
             repeater
                 .name('repeater')
                 .cssFile('../app/components/ToDoItem.css')
                 .handlers({
                 ondelete: function (v) {
-                    debugger;
-                    var newModel = _this.mydata.list.filter(function (el) { return el.id !== v.id; });
-                    _this.mydata.list = newModel;
-                    // repeater.setModel(newModel)
+                    var newModel = _this.data.list.filter(function (el) { return el.id !== v.id; });
+                    _this.data.list = newModel;
                     repeater.remove(v.id);
                 }
             })
-                .setModel(this.mydata.list)
-                // .mobxModel( mobxModel )
+                .setModel(this.data.list)
                 .render();
         };
         return ListComponent;
@@ -1679,7 +1767,7 @@ var roll = (function () {
         __extends(HomeComponent, _super);
         function HomeComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.mydata = {
+            _this.data = {
                 id: 'inputId',
                 id1: 'yyy',
                 btnFunc: function (v1, v2) {
@@ -1688,7 +1776,6 @@ var roll = (function () {
                 },
                 v3: 0,
                 mover: function (val, v2) {
-                    debugger;
                     console.log(val);
                 },
                 list: [{ id: '1a', name: 'john' }, { id: '2a', name: 'ionela' }],
@@ -1701,44 +1788,42 @@ var roll = (function () {
             return _this;
         }
         HomeComponent.prototype.render = function () {
-            var mService = new MobxService();
-            var mobxModel = mService.asObservable(this.mydata);
-            debugger;
-            var binding = SpaLib$1.component();
+            // const mService = new MobxService();
+            // const mobxModel: IMobxModel = mService.asObservable( this.mydata );
+            var _this = this;
+            var binding = new SpaComponent(this);
             binding
                 .name('mobx test')
-                .template("\n\t\t\t\t<div>\n\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" class=\"{inputclass}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t\t<button id=\"btnShowHide\">show hide</button>\n\t\t\t\t\t\t<label for=\"vehicle1\"> Show Hide text box</label><br>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div>\n\t\t\t\t\t\t<label>{name}</label>\n\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t")
+                .model(this.data)
+                .template("\n\t\t\t\t<div>\n\t\t\t\t\t<div class=\"todo1\">\n\t\t\t\t\t\t<input id=\"{id}\" class=\"{inputclass}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t\t<button id=\"btnShowHide\">show hide</button>\n\t\t\t\t\t\t<label for=\"vehicle1\"> Show Hide text box</label><br>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div>\n\t\t\t\t\t\t<label>{name}</label>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div>\n\t\t\t\t\t\t<button id=\"showmodel\">show model</button>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t")
                 .cssFile('../app/components/HomeComponent.css')
                 .event(IComponentEvent.onchange, function (newValue) {
-                debugger;
-                // const val = this.getEventValue(ev);
-                binding.setState('name', newValue);
-                binding.componentReceiveProps({});
+                _this.data.name = newValue;
             }, '{id}')
                 .event(IComponentEvent.onclick, function (newValue) {
-                debugger;
-                // const val = this.getEventValue(ev);
-                var existingVal = binding.modelValue['showInput'];
-                var isVisible = !existingVal;
-                binding.setState('showInput', isVisible);
-                if (isVisible) {
-                    binding.setState('inputclass', 'default');
+                var data = _this.data;
+                data.showInput = !data.showInput;
+                var showInput = data.showInput;
+                if (showInput) {
+                    data.inputclass = 'default';
                 }
                 else {
-                    binding.setState('inputclass', 'hidden');
+                    data.inputclass = 'hidden';
                 }
-                binding.componentReceiveProps({ showInput: isVisible });
             }, 'btnShowHide')
+                .event(IComponentEvent.onclick, function (newValue) {
+                var data = _this.data;
+                console.log(data);
+            }, 'showmodel')
                 .subscribe('name', function (newValue) {
-                debugger;
+                console.log(' name changed ', name);
             })
                 .containerTemplate("\n\t\t\t\t\t<div class=\"parent\">\n\t\t\t\t\t</div>\n            ")
-                .mobxModel(mobxModel)
+                // .mobxModel( mobxModel )
                 // .addComponent( ( comp ) => {
                 // 	comp.name( 'new 1' )
                 // 		.mobxModel( mobxModel )
                 // 		.subscribe( 'name', ( newValue ) => {
-                // 			debugger;
                 // 			comp.componentReceiveProps( { name: newValue } );
                 // 		} )
                 // 		.template( `

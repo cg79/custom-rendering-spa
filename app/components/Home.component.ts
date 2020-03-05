@@ -1,16 +1,14 @@
 import { IMobxModel } from './../../src/services/IMobxModel';
-import { ToDoItem } from './ToDoItem';
 import { MobxService } from '../../src/services/MobxService';
-import { SpaComponent } from '../../src/components/SpaComponent';
 
 import SpaLib from '../../src/SpaLib';
 import { IComponentEvent } from '../../src/components/events/IComponentEvent';
-import { SpaRepeaterComponent } from '../../src/components/SpaRepeaterComponent';
 import { BaseSpaComponent } from '../../src/components/BaseSpaComponent';
+import { SpaComponent } from '../../src/components/SpaComponent';
 
 export class HomeComponent extends BaseSpaComponent {
 
-	mydata = {
+	data = {
 		id: 'inputId',
 		id1: 'yyy',
 		btnFunc: ( v1, v2 ) => {
@@ -20,7 +18,6 @@ export class HomeComponent extends BaseSpaComponent {
 		},
 		v3: 0,
 		mover: ( val, v2 ) => {
-			debugger;
 			console.log( val );
 		},
 		list: [ { id: '1a', name: 'john' }, { id: '2a', name: 'ionela' } ],
@@ -32,17 +29,17 @@ export class HomeComponent extends BaseSpaComponent {
 	};
 
 	render () {
-		const mService = new MobxService();
-		const mobxModel: IMobxModel = mService.asObservable( this.mydata );
-		debugger;
+		// const mService = new MobxService();
+		// const mobxModel: IMobxModel = mService.asObservable( this.mydata );
 
-		var binding = SpaLib.component();
+		var binding = new SpaComponent(this);
 		binding
 			.name( 'mobx test' )
+			.model( this.data )
 			.template(
 				`
 				<div>
-				<div class="todo1">
+					<div class="todo1">
 						<input id="{id}" class="{inputclass}" type="text" value="{name}">
 						<button id="btnShowHide">show hide</button>
 						<label for="vehicle1"> Show Hide text box</label><br>
@@ -50,46 +47,50 @@ export class HomeComponent extends BaseSpaComponent {
 					<div>
 						<label>{name}</label>
 					</div>
+					<div>
+						<button id="showmodel">show model</button>
 					</div>
+				</div>
 				`)
 			.cssFile( '../app/components/HomeComponent.css' )
 			.event( IComponentEvent.onchange, ( newValue ) => {
-				debugger;
-				// const val = this.getEventValue(ev);
-				binding.setState( 'name', newValue );
+				this.data.name = newValue;
 
-				binding.componentReceiveProps({});
 			}, '{id}' )
 			.event( IComponentEvent.onclick, ( newValue ) => {
-				debugger;
-				// const val = this.getEventValue(ev);
-				const existingVal = binding.modelValue['showInput'];
-				const isVisible = !existingVal;
 
-				binding.setState( 'showInput', isVisible );
-				if(isVisible) {
-					binding.setState( 'inputclass', 'default' );
+				const {data} = this;
+
+				data.showInput = !data.showInput;
+				const {showInput} = data;
+
+				if ( showInput ) {
+					data.inputclass = 'default';
 				} else {
-					binding.setState( 'inputclass', 'hidden' );
+					data.inputclass = 'hidden';
 				}
 
-				binding.componentReceiveProps( { showInput: isVisible } );
-
 			}, 'btnShowHide' )
+			.event( IComponentEvent.onclick, ( newValue ) => {
+
+				const {data} = this;
+
+				console.log(data);
+
+			}, 'showmodel' )
 			.subscribe( 'name', ( newValue ) => {
-				debugger;
+				console.log(' name changed ', name);
 			} )
 			.containerTemplate(
 				`
 					<div class="parent">
 					</div>
             `)
-			.mobxModel( mobxModel )
+			// .mobxModel( mobxModel )
 			// .addComponent( ( comp ) => {
 			// 	comp.name( 'new 1' )
 			// 		.mobxModel( mobxModel )
 			// 		.subscribe( 'name', ( newValue ) => {
-			// 			debugger;
 			// 			comp.componentReceiveProps( { name: newValue } );
 			// 		} )
 			// 		.template( `

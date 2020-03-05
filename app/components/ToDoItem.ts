@@ -6,17 +6,20 @@ import { BaseSpaComposedComponent } from '../../src/components/BaseSpaComposedCo
 import { IComponentEvent } from '../../src/components/events/IComponentEvent';
 
 export class ToDoItem extends BaseSpaComposedComponent {
+	updateInterface (): void {
+		// throw new Error( "Method not implemented." );
+	}
+	updateNodeValue ( node: Node, val: string ): void {
+		// throw new Error( "Method not implemented." );
+	}
 	render (): void {
 		// const node = this.spaRenderer.insertHtml('a', this._html);
 
-		debugger;
 	}
 
 	private _html = '';
 
 	triggerRender (): Node| null {
-
-		debugger;
 
 		var y = SpaLib.component();
 		
@@ -44,7 +47,6 @@ export class ToDoItem extends BaseSpaComposedComponent {
 			.handlers( this._handlers )
 			.parentNode(this._parentNode)
 			.event( IComponentEvent.onclick, ( ev ) => {
-				debugger;
 				var v1 = y.asInt();
 				console.log( v1 );
 				this._handlers[ 'ondelete' ]( this._model );

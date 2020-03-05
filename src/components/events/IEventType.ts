@@ -8,3 +8,9 @@ export type IEventInfo = {
 export type IEventType = {
     [ key in IComponentEvent ] ?: Array<IEventInfo>
 };
+
+export type IEventDeclaration = {
+    name: IComponentEvent,
+    func:Function,
+    id: string,
+};

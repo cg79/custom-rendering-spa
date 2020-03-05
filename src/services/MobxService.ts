@@ -32,7 +32,6 @@ export class MobxService {
       if ( obsProp ) {
         obsProp.subscribe( ( value: any ) => {
           // this.object[prop] = value;
-          debugger;
           console.log( value );
           valueChangedEvent(value);
     

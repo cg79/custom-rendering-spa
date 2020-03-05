@@ -4,6 +4,16 @@ import { IEventType } from "./events/IEventType";
 import { BaseSpaComponent } from "./BaseSpaComponent";
 
 export class SpaComponent  extends BaseSpaComponent {
+
+    updateInterface() {
+        
+    }
+    updateNodeValue(node: Node, val: string) {
+        if(!node) {
+            return;
+        }
+        node.innerHTML = val;
+    }
     render (): Node | null {
         return this.render1();
         // const {events, spaRenderer} = this;
