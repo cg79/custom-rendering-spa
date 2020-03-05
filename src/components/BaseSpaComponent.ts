@@ -283,7 +283,8 @@ export abstract class BaseSpaComponent {
 
             propValue = data[ pName ];
             
-            template = template.replace( p,  propValue);
+            const re = new RegExp(p, 'g');
+            template = template.replace( re,  propValue);
 
             this.whatchedProperties.push(pName);
         } )

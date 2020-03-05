@@ -19,11 +19,25 @@ export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends Sp
         return new this.testType(parent);
     }
 
+  
+
     // private _parentNode: Node | null = null;
     setModel( list: Array<any> ) {
         if ( !list ) {
             return;
         }
+        debugger;
+
+        // this._mobxModel = this.asObservable( list );
+    
+        // this._model = this._mobxModel.object;
+    
+            // if(this._calee) {
+            //     this._calee.data = this._mobxModel.object;
+            // } else {
+            //     debugger;
+            // }
+
         this._parentNode = this.spaRenderer.insertHtml('a', 
 			`
 			<div class="todoContainer">
@@ -41,14 +55,31 @@ export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends Sp
             
             comp = this.getNew(this);
             
-            const node = comp.handlers(this._handlers).cssFile(this._cssFile)
+            const node = comp.handlers(this._handlers)
+            .cssFile(this._cssFile)
             .parentNode(containerItemNode)
             .model(el)
             .triggerRender();
 
             this.nodes[el.id] = node;
         } );
-
+        
+        var binding = new SpaComponent(this);
+		binding
+			.name( 'mobx test' )
+			.model( this.data )
+			.template(
+				`
+						<button id="btnShowModel">show model to console</button>
+					
+				`)
+		
+			.event( IComponentEvent.onclick, ( newValue ) => {
+				console.log(this._mobxModel.object);
+		
+			}, 'btnShowModel' )
+            .render();
+            
         return this;
     }
 

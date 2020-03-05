@@ -21,7 +21,6 @@ export class ToDoItem extends BaseSpaComposedComponent {
 
 	triggerRender (): Node| null {
 
-		debugger;
 		var y = new SpaComponent(this);
 		
 		const h1Node = y.template(
@@ -38,7 +37,6 @@ export class ToDoItem extends BaseSpaComposedComponent {
 			// .model( this._model )
 			.observedModel(this._mobxModel)
 			.event( IComponentEvent.onclick, ( newValue ) => {
-				debugger;
 				// const { data } = this;
 				this._model.name = this.guid();
 

@@ -54,7 +54,6 @@ export class ListComponent extends SpaComponent {
 				`)
 
 			.event( IComponentEvent.onclick, ( newValue ) => {
-				debugger;
 				const { data } = this;
 				data.v1 = this.guid();
 
@@ -106,6 +105,7 @@ export class ListComponent extends SpaComponent {
 				}
 
 			} )
+			// .model(this.data.list)
 			.setModel( this.data.list )
 			.render();
 	}

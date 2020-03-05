@@ -32,6 +32,7 @@ export class HomeComponent extends BaseSpaComponent {
 		// const mService = new MobxService();
 		// const mobxModel: IMobxModel = mService.asObservable( this.mydata );
 
+		debugger;
 		var binding = new SpaComponent(this);
 		binding
 			.name( 'mobx test' )

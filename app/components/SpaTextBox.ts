@@ -22,10 +22,8 @@ export class SpaTextBox extends BaseSpaComponent {
         if(!node) {
             return;
 		}
-		debugger;
 		var newValues  = this.propValues;
 		if(!newValues) {
-			debugger;
 			return;
 		}
 		Object.keys(newValues).forEach(v => {

@@ -30,6 +30,42 @@ var roll = (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
+    var IComponentEvent;
+    (function (IComponentEvent) {
+        IComponentEvent["oncopy"] = "oncopy";
+        IComponentEvent["oncut"] = "oncut";
+        IComponentEvent["onpaste"] = "onpaste";
+        IComponentEvent["onabort"] = "onabort";
+        IComponentEvent["onblur"] = "onblur";
+        IComponentEvent["oncancel"] = "oncancel";
+        IComponentEvent["oncanplay"] = "oncanplay";
+        IComponentEvent["onchange"] = "onchange";
+        IComponentEvent["onclick"] = "onclick";
+        IComponentEvent["onclose"] = "onclose";
+        IComponentEvent["ondblclick"] = "ondblclick";
+        IComponentEvent["ondrag"] = "ondrag";
+        IComponentEvent["ondragend"] = "ondragend";
+        IComponentEvent["ondragenter"] = "ondragenter";
+        IComponentEvent["ondragleave"] = "ondragleave";
+        IComponentEvent["ondragover"] = "ondragover";
+        IComponentEvent["ondragstart"] = "ondragstart";
+        IComponentEvent["ondrop"] = "ondrop";
+        IComponentEvent["onfocus"] = "onfocus";
+        IComponentEvent["onformdata"] = "onformdata";
+        IComponentEvent["oninput"] = "oninput";
+        IComponentEvent["onkeydown"] = "onkeydown";
+        IComponentEvent["onkeypress"] = "onkeypress";
+        IComponentEvent["onkeyup"] = "onkeyup";
+        IComponentEvent["onmousedown"] = "onmousedown";
+        IComponentEvent["onmouseenter"] = "onmouseenter";
+        IComponentEvent["onmouseleave"] = "onmouseleave";
+        IComponentEvent["onmousemove"] = "onmousemove";
+        IComponentEvent["onmouseout"] = "onmouseout";
+        IComponentEvent["onmouseover"] = "onmouseover";
+        IComponentEvent["onmouseup"] = "onmouseup";
+        IComponentEvent["onmousewheel"] = "onmousewheel";
+    })(IComponentEvent || (IComponentEvent = {}));
+
     var SpaRender = /** @class */ (function () {
         function SpaRender() {
             var _this = this;
@@ -1094,7 +1130,8 @@ var roll = (function () {
                 Object.keys(props).forEach(function (p) {
                     pName = p.replace('{', '').replace('}', '');
                     propValue = data[pName];
-                    template = template.replace(p, propValue);
+                    var re = new RegExp(p, 'g');
+                    template = template.replace(re, propValue);
                     _this.whatchedProperties.push(pName);
                 });
                 var mobxModel = _this._mobxModel;
@@ -1529,17 +1566,35 @@ var roll = (function () {
             if (!list) {
                 return;
             }
+            debugger;
+            // this._mobxModel = this.asObservable( list );
+            // this._model = this._mobxModel.object;
+            // if(this._calee) {
+            //     this._calee.data = this._mobxModel.object;
+            // } else {
+            //     debugger;
+            // }
             this._parentNode = this.spaRenderer.insertHtml('a', "\n\t\t\t<div class=\"todoContainer\">\n\t\t\t</div>\n\t\t\t");
             var comp = null;
             list.forEach(function (el) {
                 var containerItemNode = _this.spaRenderer.addHmlChild(_this._parentNode, "\n\t\t\t<div class=\"todorow\" id=\"todolist\">\n\t\t\t</div>\n            ");
                 comp = _this.getNew(_this);
-                var node = comp.handlers(_this._handlers).cssFile(_this._cssFile)
+                var node = comp.handlers(_this._handlers)
+                    .cssFile(_this._cssFile)
                     .parentNode(containerItemNode)
                     .model(el)
                     .triggerRender();
                 _this.nodes[el.id] = node;
             });
+            var binding = new SpaComponent(this);
+            binding
+                .name('mobx test')
+                .model(this.data)
+                .template("\n\t\t\t\t\t\t<button id=\"btnShowModel\">show model to console</button>\n\t\t\t\t\t\n\t\t\t\t")
+                .event(IComponentEvent.onclick, function (newValue) {
+                console.log(_this._mobxModel.object);
+            }, 'btnShowModel')
+                .render();
             return this;
         };
         SpaRepeaterComponent.prototype.parentTemplate = function (template) {
@@ -1558,42 +1613,6 @@ var roll = (function () {
         };
         return SpaRepeaterComponent;
     }(SpaComponent));
-
-    var IComponentEvent;
-    (function (IComponentEvent) {
-        IComponentEvent["oncopy"] = "oncopy";
-        IComponentEvent["oncut"] = "oncut";
-        IComponentEvent["onpaste"] = "onpaste";
-        IComponentEvent["onabort"] = "onabort";
-        IComponentEvent["onblur"] = "onblur";
-        IComponentEvent["oncancel"] = "oncancel";
-        IComponentEvent["oncanplay"] = "oncanplay";
-        IComponentEvent["onchange"] = "onchange";
-        IComponentEvent["onclick"] = "onclick";
-        IComponentEvent["onclose"] = "onclose";
-        IComponentEvent["ondblclick"] = "ondblclick";
-        IComponentEvent["ondrag"] = "ondrag";
-        IComponentEvent["ondragend"] = "ondragend";
-        IComponentEvent["ondragenter"] = "ondragenter";
-        IComponentEvent["ondragleave"] = "ondragleave";
-        IComponentEvent["ondragover"] = "ondragover";
-        IComponentEvent["ondragstart"] = "ondragstart";
-        IComponentEvent["ondrop"] = "ondrop";
-        IComponentEvent["onfocus"] = "onfocus";
-        IComponentEvent["onformdata"] = "onformdata";
-        IComponentEvent["oninput"] = "oninput";
-        IComponentEvent["onkeydown"] = "onkeydown";
-        IComponentEvent["onkeypress"] = "onkeypress";
-        IComponentEvent["onkeyup"] = "onkeyup";
-        IComponentEvent["onmousedown"] = "onmousedown";
-        IComponentEvent["onmouseenter"] = "onmouseenter";
-        IComponentEvent["onmouseleave"] = "onmouseleave";
-        IComponentEvent["onmousemove"] = "onmousemove";
-        IComponentEvent["onmouseout"] = "onmouseout";
-        IComponentEvent["onmouseover"] = "onmouseover";
-        IComponentEvent["onmouseup"] = "onmouseup";
-        IComponentEvent["onmousewheel"] = "onmousewheel";
-    })(IComponentEvent || (IComponentEvent = {}));
 
     var BaseSpaComposedComponent = /** @class */ (function (_super) {
         __extends(BaseSpaComposedComponent, _super);
@@ -1621,7 +1640,6 @@ var roll = (function () {
         };
         ToDoItem.prototype.triggerRender = function () {
             var _this = this;
-            debugger;
             var y = new SpaComponent(this);
             var h1Node = y.template("\n\t\t\t\n\t\t\t\t<div class=\"todo\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t<button id=\"changev1\">change v1</button>\n\t\t\t\t</div>\n\t\t\t")
                 .cssFile(this._cssFile)
@@ -1629,7 +1647,6 @@ var roll = (function () {
                 // .model( this._model )
                 .observedModel(this._mobxModel)
                 .event(IComponentEvent.onclick, function (newValue) {
-                debugger;
                 // const { data } = this;
                 _this._model.name = _this.guid();
             }, 'changev1')
@@ -1670,10 +1687,8 @@ var roll = (function () {
             if (!node) {
                 return;
             }
-            debugger;
             var newValues = this.propValues;
             if (!newValues) {
-                debugger;
                 return;
             }
             Object.keys(newValues).forEach(function (v) {
@@ -1735,7 +1750,6 @@ var roll = (function () {
                 .model(this.data)
                 .template("\n\t\t\t\t\t\t<button id=\"changev1\">change v1</button>\n\t\t\t\t\t\n\t\t\t\t")
                 .event(IComponentEvent.onclick, function (newValue) {
-                debugger;
                 var data = _this.data;
                 data.v1 = _this.guid();
             }, 'changev1')
@@ -1770,6 +1784,7 @@ var roll = (function () {
                     repeater.remove(v.id);
                 }
             })
+                // .model(this.data.list)
                 .setModel(this.data.list)
                 .render();
         };
@@ -1804,6 +1819,7 @@ var roll = (function () {
             // const mService = new MobxService();
             // const mobxModel: IMobxModel = mService.asObservable( this.mydata );
             var _this = this;
+            debugger;
             var binding = new SpaComponent(this);
             binding
                 .name('mobx test')
