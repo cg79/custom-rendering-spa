@@ -1545,6 +1545,14 @@ var roll = (function () {
         return SpaComponent;
     }(BaseSpaComponent));
 
+    var BaseSpaComposedComponent = /** @class */ (function (_super) {
+        __extends(BaseSpaComposedComponent, _super);
+        function BaseSpaComposedComponent() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        return BaseSpaComposedComponent;
+    }(BaseSpaComponent));
+
     var SpaRepeaterComponent = /** @class */ (function (_super) {
         __extends(SpaRepeaterComponent, _super);
         function SpaRepeaterComponent(testType) {
@@ -1557,27 +1565,16 @@ var roll = (function () {
             _this._parentTemplate = '';
             return _this;
         }
-        SpaRepeaterComponent.prototype.getNew = function (parent) {
-            return new this.testType(parent);
+        SpaRepeaterComponent.prototype.triggerRender = function () {
+            throw new Error("Method not implemented.");
         };
-        // private _parentNode: Node | null = null;
-        SpaRepeaterComponent.prototype.setModel = function (list) {
+        SpaRepeaterComponent.prototype.render = function () {
             var _this = this;
-            if (!list) {
-                return;
-            }
-            debugger;
-            // this._mobxModel = this.asObservable( list );
-            // this._model = this._mobxModel.object;
-            // if(this._calee) {
-            //     this._calee.data = this._mobxModel.object;
-            // } else {
-            //     debugger;
-            // }
-            this._parentNode = this.spaRenderer.insertHtml('a', "\n\t\t\t<div class=\"todoContainer\">\n\t\t\t</div>\n\t\t\t");
+            var list = this._mobxModel.object;
+            this._parentNode = this.spaRenderer.insertHtml('a', "\n        <div class=\"todoContainer\">\n        </div>\n        ");
             var comp = null;
             list.forEach(function (el) {
-                var containerItemNode = _this.spaRenderer.addHmlChild(_this._parentNode, "\n\t\t\t<div class=\"todorow\" id=\"todolist\">\n\t\t\t</div>\n            ");
+                var containerItemNode = _this.spaRenderer.addHmlChild(_this._parentNode, "\n        <div class=\"todorow\" id=\"todolist\">\n        </div>\n        ");
                 comp = _this.getNew(_this);
                 var node = comp.handlers(_this._handlers)
                     .cssFile(_this._cssFile)
@@ -1590,11 +1587,34 @@ var roll = (function () {
             binding
                 .name('mobx test')
                 .model(this.data)
-                .template("\n\t\t\t\t\t\t<button id=\"btnShowModel\">show model to console</button>\n\t\t\t\t\t\n\t\t\t\t")
+                .template("\n                    <button id=\"btnShowModel\">show model to console</button>\n                \n            ")
                 .event(IComponentEvent.onclick, function (newValue) {
                 console.log(_this._mobxModel.object);
             }, 'btnShowModel')
                 .render();
+        };
+        SpaRepeaterComponent.prototype.updateInterface = function () {
+            throw new Error("Method not implemented.");
+        };
+        SpaRepeaterComponent.prototype.updateNodeValue = function (node, val) {
+            throw new Error("Method not implemented.");
+        };
+        SpaRepeaterComponent.prototype.getNew = function (parent) {
+            return new this.testType(parent);
+        };
+        // private _parentNode: Node | null = null;
+        SpaRepeaterComponent.prototype.setModel = function (list) {
+            if (!list) {
+                return;
+            }
+            debugger;
+            // this._mobxModel = this.asObservable( list );
+            // this._model = this._mobxModel.object;
+            // if(this._calee) {
+            //     this._calee.data = this._mobxModel.object;
+            // } else {
+            //     debugger;
+            // }
             return this;
         };
         SpaRepeaterComponent.prototype.parentTemplate = function (template) {
@@ -1612,15 +1632,7 @@ var roll = (function () {
             this._parentNode.removeChild(node);
         };
         return SpaRepeaterComponent;
-    }(SpaComponent));
-
-    var BaseSpaComposedComponent = /** @class */ (function (_super) {
-        __extends(BaseSpaComposedComponent, _super);
-        function BaseSpaComposedComponent() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        return BaseSpaComposedComponent;
-    }(BaseSpaComponent));
+    }(BaseSpaComposedComponent));
 
     var ToDoItem = /** @class */ (function (_super) {
         __extends(ToDoItem, _super);
@@ -1784,8 +1796,8 @@ var roll = (function () {
                     repeater.remove(v.id);
                 }
             })
-                // .model(this.data.list)
-                .setModel(this.data.list)
+                .model(this.data.list)
+                // .setModel( this.data.list )
                 .render();
         };
         return ListComponent;

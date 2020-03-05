@@ -105,8 +105,8 @@ export class ListComponent extends SpaComponent {
 				}
 
 			} )
-			// .model(this.data.list)
-			.setModel( this.data.list )
+			.model(this.data.list)
+			// .setModel( this.data.list )
 			.render();
 	}
 }
