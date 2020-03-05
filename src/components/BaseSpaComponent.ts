@@ -81,7 +81,21 @@ export abstract class BaseSpaComponent {
     model ( state: any ) {
         this._mobxModel = this.asObservable( state );
 
-        this._model = state;
+        this._model = this._mobxModel.object;
+
+        if(this._calee) {
+            this._calee.data = this._mobxModel.object;
+        } else {
+            debugger;
+        }
+
+        return this;
+    }
+
+    observedModel ( state: any ) {
+        this._mobxModel = state;
+
+        this._model = this._mobxModel.object;
 
         if(this._calee) {
             this._calee.data = this._mobxModel.object;
@@ -248,6 +262,9 @@ export abstract class BaseSpaComponent {
     }
 
     private templateToHtmlText = ( template, data ) => {
+        if(!data) {
+            debugger;
+        }
         // const props = template.match( /(\{)(.*?)(\})/gi );
         const props = this.parseTemplate(template);
         if(!props) {

@@ -1076,6 +1076,9 @@ var roll = (function () {
             this.whatchedProperties = null;
             this.propValues = {};
             this.templateToHtmlText = function (template, data) {
+                if (!data) {
+                    debugger;
+                }
                 // const props = template.match( /(\{)(.*?)(\})/gi );
                 var props = _this.parseTemplate(template);
                 if (!props) {
@@ -1208,7 +1211,18 @@ var roll = (function () {
         };
         BaseSpaComponent.prototype.model = function (state) {
             this._mobxModel = this.asObservable(state);
-            this._model = state;
+            this._model = this._mobxModel.object;
+            if (this._calee) {
+                this._calee.data = this._mobxModel.object;
+            }
+            else {
+                debugger;
+            }
+            return this;
+        };
+        BaseSpaComponent.prototype.observedModel = function (state) {
+            this._mobxModel = state;
+            this._model = this._mobxModel.object;
             if (this._calee) {
                 this._calee.data = this._mobxModel.object;
             }
@@ -1519,7 +1533,7 @@ var roll = (function () {
             var comp = null;
             list.forEach(function (el) {
                 var containerItemNode = _this.spaRenderer.addHmlChild(_this._parentNode, "\n\t\t\t<div class=\"todorow\" id=\"todolist\">\n\t\t\t</div>\n            ");
-                comp = _this.getNew();
+                comp = _this.getNew(_this);
                 var node = comp.handlers(_this._handlers).cssFile(_this._cssFile)
                     .parentNode(containerItemNode)
                     .model(el)
@@ -1581,47 +1595,11 @@ var roll = (function () {
         IComponentEvent["onmousewheel"] = "onmousewheel";
     })(IComponentEvent || (IComponentEvent = {}));
 
-    // import { SpaLabel } from './components/SpaLabel';
-    var SpaView = /** @class */ (function () {
-        function SpaView(model) {
-            this.model = model;
-            // this.renderer = new SpaRender();
-        }
-        SpaView.prototype.render = function () {
-            return "j";
-        };
-        return SpaView;
-    }());
-
-    var SpaLib = /** @class */ (function () {
-        function SpaLib() {
-            this.components = {};
-            window['spalib'] = this;
-            // this.page = new SpaPage();
-            this.spaRenderer = new SpaRender();
-        }
-        SpaLib.prototype.includeView = function () {
-            return new SpaView({});
-        };
-        SpaLib.prototype.component = function () {
-            return new SpaComponent();
-        };
-        SpaLib.prototype.addComponent = function (name, component) {
-            this.components[name] = component;
-        };
-        return SpaLib;
-    }());
-    var SpaLib$1 = new SpaLib();
-
     var BaseSpaComposedComponent = /** @class */ (function (_super) {
         __extends(BaseSpaComposedComponent, _super);
         function BaseSpaComposedComponent() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        BaseSpaComposedComponent.prototype.model = function (state) {
-            this._model = state;
-            return this;
-        };
         return BaseSpaComposedComponent;
     }(BaseSpaComponent));
 
@@ -1643,13 +1621,20 @@ var roll = (function () {
         };
         ToDoItem.prototype.triggerRender = function () {
             var _this = this;
-            var y = SpaLib$1.component();
-            var h1Node = y.template("\n\t\t\t\n\t\t\t\t<div class=\"todo\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t</div>\n\t\t\t")
+            debugger;
+            var y = new SpaComponent(this);
+            var h1Node = y.template("\n\t\t\t\n\t\t\t\t<div class=\"todo\">\n\t\t\t\t\t<input id=\"{id}\" type=\"text\" value=\"{name}\">\n\t\t\t\t\t<button id=\"changev1\">change v1</button>\n\t\t\t\t</div>\n\t\t\t")
                 .cssFile(this._cssFile)
                 .parentNode(this._parentNode)
-                .model(this._model)
+                // .model( this._model )
+                .observedModel(this._mobxModel)
+                .event(IComponentEvent.onclick, function (newValue) {
+                debugger;
+                // const { data } = this;
+                _this._model.name = _this.guid();
+            }, 'changev1')
                 .render();
-            var x = SpaLib$1.component();
+            var x = new SpaComponent(this);
             var h2Node = x.template("\n\t\t\t\t<button>{id}</button>\n\t\t\t\t</div>\n\t\t\t")
                 .handlers(this._handlers)
                 .parentNode(this._parentNode)
@@ -1658,7 +1643,7 @@ var roll = (function () {
                 console.log(v1);
                 _this._handlers['ondelete'](_this._model);
             })
-                .model(this._model)
+                .observedModel(this._mobxModel)
                 .render();
             this._parentNode.appendChild(h1Node);
             this._parentNode.appendChild(h2Node);
@@ -1748,12 +1733,12 @@ var roll = (function () {
             binding
                 .name('mobx test')
                 .model(this.data)
-                .template("\n\t\t\t\t\t\t<button id=\"btnShowHide\">show hide</button>\n\t\t\t\t\t\n\t\t\t\t")
+                .template("\n\t\t\t\t\t\t<button id=\"changev1\">change v1</button>\n\t\t\t\t\t\n\t\t\t\t")
                 .event(IComponentEvent.onclick, function (newValue) {
                 debugger;
                 var data = _this.data;
                 data.v1 = _this.guid();
-            }, 'btnShowHide')
+            }, 'changev1')
                 .render();
             var z = new SpaTextBox(this)
                 .id('t2')
@@ -1862,6 +1847,38 @@ var roll = (function () {
         };
         return HomeComponent;
     }(BaseSpaComponent));
+
+    // import { SpaLabel } from './components/SpaLabel';
+    var SpaView = /** @class */ (function () {
+        function SpaView(model) {
+            this.model = model;
+            // this.renderer = new SpaRender();
+        }
+        SpaView.prototype.render = function () {
+            return "j";
+        };
+        return SpaView;
+    }());
+
+    var SpaLib = /** @class */ (function () {
+        function SpaLib() {
+            this.components = {};
+            window['spalib'] = this;
+            // this.page = new SpaPage();
+            this.spaRenderer = new SpaRender();
+        }
+        SpaLib.prototype.includeView = function () {
+            return new SpaView({});
+        };
+        SpaLib.prototype.component = function () {
+            return new SpaComponent();
+        };
+        SpaLib.prototype.addComponent = function (name, component) {
+            this.components[name] = component;
+        };
+        return SpaLib;
+    }());
+    var SpaLib$1 = new SpaLib();
 
     var HomeModule = /** @class */ (function () {
         function HomeModule() {

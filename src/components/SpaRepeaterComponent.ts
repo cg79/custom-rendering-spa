@@ -39,7 +39,7 @@ export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends Sp
 			</div>
             `);
             
-            comp = this.getNew();
+            comp = this.getNew(this);
             
             const node = comp.handlers(this._handlers).cssFile(this._cssFile)
             .parentNode(containerItemNode)

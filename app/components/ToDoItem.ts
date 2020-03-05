@@ -21,22 +21,31 @@ export class ToDoItem extends BaseSpaComposedComponent {
 
 	triggerRender (): Node| null {
 
-		var y = SpaLib.component();
+		debugger;
+		var y = new SpaComponent(this);
 		
 		const h1Node = y.template(
 			`
 			
 				<div class="todo">
 					<input id="{id}" type="text" value="{name}">
+					<button id="changev1">change v1</button>
 				</div>
 			`)
 
 			.cssFile( this._cssFile )
 			.parentNode(this._parentNode)
-			.model( this._model )
+			// .model( this._model )
+			.observedModel(this._mobxModel)
+			.event( IComponentEvent.onclick, ( newValue ) => {
+				debugger;
+				// const { data } = this;
+				this._model.name = this.guid();
+
+			}, 'changev1' )
 			.render();
 
-		var x = SpaLib.component();
+		var x = new SpaComponent(this);
 		
 		const h2Node = x.template(
 			`
@@ -51,7 +60,7 @@ export class ToDoItem extends BaseSpaComposedComponent {
 				console.log( v1 );
 				this._handlers[ 'ondelete' ]( this._model );
 			} )
-			.model( this._model )
+			.observedModel( this._mobxModel )
 			.render();
 			this._parentNode.appendChild( h1Node );
 			this._parentNode.appendChild( h2Node );

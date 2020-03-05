@@ -49,7 +49,7 @@ export class ListComponent extends SpaComponent {
 			.model( this.data )
 			.template(
 				`
-						<button id="btnShowHide">show hide</button>
+						<button id="changev1">change v1</button>
 					
 				`)
 
@@ -58,7 +58,7 @@ export class ListComponent extends SpaComponent {
 				const { data } = this;
 				data.v1 = this.guid();
 
-			}, 'btnShowHide' )
+			}, 'changev1' )
 			.render();
 
 		var z = new SpaTextBox( this )
