@@ -11,12 +11,12 @@ export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends Sp
     // }
 
     private nodes = {};
-    constructor ( private testType: new () => T ) {
+    constructor ( private testType: new (parent: BaseSpaComponent | null ) => T ) {
         super();
     }
 
-    getNew() : T {
-        return new this.testType();
+    getNew(parent: BaseSpaComponent | null) : T {
+        return new this.testType(parent);
     }
 
     // private _parentNode: Node | null = null;

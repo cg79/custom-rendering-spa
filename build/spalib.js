@@ -1490,8 +1490,8 @@ var roll = (function () {
             _this._parentTemplate = '';
             return _this;
         }
-        SpaRepeaterComponent.prototype.getNew = function () {
-            return new this.testType();
+        SpaRepeaterComponent.prototype.getNew = function (parent) {
+            return new this.testType(parent);
         };
         // private _parentNode: Node | null = null;
         SpaRepeaterComponent.prototype.setModel = function (list) {
