@@ -97,14 +97,7 @@ export class ListComponent extends SpaComponent {
 		repeater
 			.name( 'repeater' )
 			.cssFile( '../app/components/ToDoItem.css' )
-			.handlers( {
-				ondelete: ( v ) => {
-					const newModel = this.data.list.filter( el => el.id !== v.id );
-					this.data.list = newModel;
-					repeater.remove( v.id );
-				}
-
-			} )
+			
 			.model(this.data.list)
 			// .setModel( this.data.list )
 			.render();

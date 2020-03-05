@@ -1570,6 +1570,14 @@ var roll = (function () {
         };
         SpaRepeaterComponent.prototype.render = function () {
             var _this = this;
+            this.handlers({
+                ondelete: function (v) {
+                    debugger;
+                    var newModel = _this._mobxModel.object.filter(function (el) { return el.id !== v.id; });
+                    _this._mobxModel.object = newModel;
+                    _this.remove(v.id);
+                }
+            });
             var list = this._mobxModel.object;
             this._parentNode = this.spaRenderer.insertHtml('a', "\n        <div class=\"todoContainer\">\n        </div>\n        ");
             var comp = null;
@@ -1789,13 +1797,6 @@ var roll = (function () {
             repeater
                 .name('repeater')
                 .cssFile('../app/components/ToDoItem.css')
-                .handlers({
-                ondelete: function (v) {
-                    var newModel = _this.data.list.filter(function (el) { return el.id !== v.id; });
-                    _this.data.list = newModel;
-                    repeater.remove(v.id);
-                }
-            })
                 .model(this.data.list)
                 // .setModel( this.data.list )
                 .render();

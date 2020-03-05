@@ -10,6 +10,17 @@ export class SpaRepeaterComponent<T extends BaseSpaComposedComponent> extends Ba
         throw new Error( "Method not implemented." );
     }
     render (): void {
+
+        this.handlers( {
+            ondelete: ( v ) => {
+                debugger;
+                const newModel = this._mobxModel.object.filter( el => el.id !== v.id );
+                this._mobxModel.object = newModel;
+                this.remove( v.id );
+            }
+
+        } )
+
         const list = this._mobxModel.object;
         this._parentNode = this.spaRenderer.insertHtml('a', 
         `
