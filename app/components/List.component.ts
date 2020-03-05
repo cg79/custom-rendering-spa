@@ -59,17 +59,6 @@ export class ListComponent extends SpaComponent {
 			`)
 			.model( this.data )
 			.event( IComponentEvent.onclick, ( ev ) => {
-				// var v1 = this.getValue(y);
-				// var v2 = this.getValue(z);
-
-				// var v3 = v1 + v2;
-
-				// console.log( v3 );
-
-				// total.setState( 'v3', v3 );
-
-				// total.setValue(v3);
-
 				this.data.v3 = this.data.v1 + this.data.v2;
 				this.data.v3class = this.guid();
 
