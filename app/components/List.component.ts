@@ -26,7 +26,8 @@ export class ListComponent extends SpaComponent {
 		},
 		list: [ { id: '1a', name: 'john' }, { id: '2a', name: 'ionela' } ],
 		text: "hello dinamic button",
-		v3class: ''
+		v3class: '',
+
 	};
 
 	render () {
@@ -40,6 +41,24 @@ export class ListComponent extends SpaComponent {
 			`)
 			.model( this.data )
 			// .event( IComponentEvent.onmouseover, this.data.mover )
+			.render();
+
+		var binding = new SpaComponent( this );
+		binding
+			.name( 'mobx test' )
+			.model( this.data )
+			.template(
+				`
+						<button id="btnShowHide">show hide</button>
+					
+				`)
+
+			.event( IComponentEvent.onclick, ( newValue ) => {
+				debugger;
+				const { data } = this;
+				data.v1 = this.guid();
+
+			}, 'btnShowHide' )
 			.render();
 
 		var z = new SpaTextBox( this )

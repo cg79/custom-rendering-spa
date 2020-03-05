@@ -1077,7 +1077,6 @@ var roll = (function () {
             this.propValues = {};
             this.templateToHtmlText = function (template, data) {
                 // const props = template.match( /(\{)(.*?)(\})/gi );
-                debugger;
                 var props = _this.parseTemplate(template);
                 if (!props) {
                     return template;
@@ -1088,13 +1087,10 @@ var roll = (function () {
                     wasEmpty = true;
                 }
                 var pName = '';
-                _this.propValues = {};
                 var propValue = '';
-                debugger;
                 Object.keys(props).forEach(function (p) {
                     pName = p.replace('{', '').replace('}', '');
                     propValue = data[pName];
-                    _this.propValues[p] = propValue;
                     template = template.replace(p, propValue);
                     _this.whatchedProperties.push(pName);
                 });
@@ -1103,17 +1099,18 @@ var roll = (function () {
                     var prop = '';
                     for (var i = 0; i < _this.whatchedProperties.length; i++) {
                         prop = _this.whatchedProperties[i];
-                        var obsProp = mobxModel.observables[prop];
-                        if (obsProp) {
-                            obsProp.subscribe(function (value) {
-                                // this.object[prop] = value;
-                                if (!_this.rendered) {
-                                    return;
-                                }
-                                console.log(value);
-                                _this.refresh();
-                            });
-                        }
+                        var htmlProp = props["{" + prop + "}"];
+                        _this.subscribePropValueChanged(mobxModel, prop, htmlProp);
+                        // const obsProp = mobxModel.observables[ prop ];
+                        // if ( obsProp ) {
+                        //     obsProp.subscribe( ( value: any ) => {
+                        //         if(!this.rendered) {
+                        //             return;
+                        //         }
+                        //         console.log( value );
+                        //         this.refresh();
+                        //     } )
+                        // }
                     }
                 }
                 return template;
@@ -1315,12 +1312,17 @@ var roll = (function () {
         BaseSpaComponent.prototype.parseTemplate = function (template) {
             var result = {};
             var props = template.match(/(\w+=\".*?\")/gi);
-            if (!props) {
+            var unlinkedBindings = template.match(/(>\s{0,}\{)(.*?)(\}\s{0,}<)/gi);
+            if (unlinkedBindings) {
+                var unlinkArray = unlinkedBindings[0].trim().replace('<', '').replace('>', '');
+                result[unlinkArray] = null;
+            }
+            if (!props && !unlinkedBindings) {
                 return null;
             }
             var pValue = [];
             var bindValue = '';
-            props.forEach(function (prop) {
+            props && props.forEach(function (prop) {
                 pValue = prop.trim().split('=');
                 bindValue = pValue[1];
                 if (bindValue.indexOf('{') > -1) {
@@ -1329,6 +1331,20 @@ var roll = (function () {
                 }
             });
             return result;
+        };
+        BaseSpaComponent.prototype.subscribePropValueChanged = function (mobxModel, prop, htmlProp) {
+            var _this = this;
+            var obsProp = mobxModel.observables[prop];
+            if (obsProp) {
+                obsProp.subscribe(function (value) {
+                    if (!_this.rendered) {
+                        return;
+                    }
+                    console.log(prop, htmlProp, value);
+                    _this.propValues[htmlProp] = value;
+                    _this.refresh();
+                });
+            }
         };
         BaseSpaComponent.prototype.assignEvents = function (node) {
             var _this = this;
@@ -1376,8 +1392,8 @@ var roll = (function () {
         BaseSpaComponent.prototype.refresh = function () {
             var _a = this, node = _a.node, components = _a.components;
             var model = this.getModel();
-            var h = this.templateToHtmlText(this._template, model);
-            // const h = this.spaRenderer.getHtml( this._template, model );
+            // const h = this.templateToHtmlText(this._template, model);
+            var h = this.spaRenderer.getHtml(this._template, model);
             this.updateNodeValue(node, h);
             // node.innerHTML = h;
             this.assignEvents(node);
@@ -1670,8 +1686,15 @@ var roll = (function () {
                 return;
             }
             debugger;
-            var a = this.propValues;
-            node.outerHTML = val;
+            var newValues = this.propValues;
+            if (!newValues) {
+                debugger;
+                return;
+            }
+            Object.keys(newValues).forEach(function (v) {
+                node[v] = newValues[v];
+            });
+            // node.outerHTML = val;
         };
         SpaTextBox.prototype.prop = function (prop) {
             this.propName = prop;
@@ -1708,7 +1731,7 @@ var roll = (function () {
                 },
                 list: [{ id: '1a', name: 'john' }, { id: '2a', name: 'ionela' }],
                 text: "hello dinamic button",
-                v3class: ''
+                v3class: '',
             };
             return _this;
         }
@@ -1721,6 +1744,17 @@ var roll = (function () {
                 .model(this.data)
                 // .event( IComponentEvent.onmouseover, this.data.mover )
                 .render();
+            var binding = new SpaComponent(this);
+            binding
+                .name('mobx test')
+                .model(this.data)
+                .template("\n\t\t\t\t\t\t<button id=\"btnShowHide\">show hide</button>\n\t\t\t\t\t\n\t\t\t\t")
+                .event(IComponentEvent.onclick, function (newValue) {
+                debugger;
+                var data = _this.data;
+                data.v1 = _this.guid();
+            }, 'btnShowHide')
+                .render();
             var z = new SpaTextBox(this)
                 .id('t2')
                 .prop('v2')
@@ -1731,12 +1765,6 @@ var roll = (function () {
             x.template("\n\t\t\t\t<button>{id1}</button>\n\t\t\t")
                 .model(this.data)
                 .event(IComponentEvent.onclick, function (ev) {
-                // var v1 = this.getValue(y);
-                // var v2 = this.getValue(z);
-                // var v3 = v1 + v2;
-                // console.log( v3 );
-                // total.setState( 'v3', v3 );
-                // total.setValue(v3);
                 _this.data.v3 = _this.data.v1 + _this.data.v2;
                 _this.data.v3class = _this.guid();
             })

@@ -23,8 +23,15 @@ export class SpaTextBox extends BaseSpaComponent {
             return;
 		}
 		debugger;
-		var a  = this.propValues;
-        node.outerHTML = val;
+		var newValues  = this.propValues;
+		if(!newValues) {
+			debugger;
+			return;
+		}
+		Object.keys(newValues).forEach(v => {
+			node[v] = newValues[v];
+		}); 
+        // node.outerHTML = val;
     }
 	private propName = '';
 	prop (prop) {

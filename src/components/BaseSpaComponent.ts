@@ -1,3 +1,4 @@
+import { IMobxModel } from './../services/IMobxModel';
 import { SpaComponent } from './SpaComponent';
 import { SpaRender } from "../rendering/SpaRender";
 import { IComponentEvent } from "./events/IComponentEvent";
@@ -221,12 +222,18 @@ export abstract class BaseSpaComponent {
             
         };
         const props = template.match( /(\w+=\".*?\")/gi );
-        if(!props) {
+
+        const unlinkedBindings = template.match( /(>\s{0,}\{)(.*?)(\}\s{0,}<)/gi );
+        if(unlinkedBindings) {
+           const unlinkArray = unlinkedBindings[0].trim().replace('<', '').replace('>', '');
+            result[unlinkArray] = null;
+        }
+        if(!props && !unlinkedBindings) {
             return null;
         }
         let pValue = [];
         let bindValue = '';
-        props.forEach(prop => {
+        props && props.forEach(prop => {
             pValue = prop.trim().split('=');
             bindValue = pValue[1];
             
@@ -239,9 +246,9 @@ export abstract class BaseSpaComponent {
 
         return result;
     }
+
     private templateToHtmlText = ( template, data ) => {
         // const props = template.match( /(\{)(.*?)(\})/gi );
-        debugger;
         const props = this.parseTemplate(template);
         if(!props) {
             return template;
@@ -252,15 +259,13 @@ export abstract class BaseSpaComponent {
             wasEmpty = true;
         }
         var pName = '';
-        this.propValues = {};
         let propValue = '';
-        debugger;
 
         Object.keys(props).forEach( p => {
             pName = p.replace( '{', '' ).replace( '}', '' );
 
             propValue = data[ pName ];
-            this.propValues[p] = propValue;
+            
             template = template.replace( p,  propValue);
 
             this.whatchedProperties.push(pName);
@@ -273,24 +278,40 @@ export abstract class BaseSpaComponent {
             for(var i=0;i<this.whatchedProperties.length;i++) {
                     
                     prop = this.whatchedProperties[i];
+                    const htmlProp = props[`{${prop}}`];
+                    this.subscribePropValueChanged(mobxModel, prop, htmlProp);
+                    // const obsProp = mobxModel.observables[ prop ];
+                    // if ( obsProp ) {
+                    //     obsProp.subscribe( ( value: any ) => {
+                    //         if(!this.rendered) {
+                    //             return;
+                    //         }
+                    //         console.log( value );
 
-                    const obsProp = mobxModel.observables[ prop ];
-                    if ( obsProp ) {
-                        obsProp.subscribe( ( value: any ) => {
-                            // this.object[prop] = value;
-                            if(!this.rendered) {
-                                return;
-                            }
-                            console.log( value );
-
-                            this.refresh();
+                    //         this.refresh();
         
-                        } )
-                    }
+                    //     } )
+                    // }
         
             }
         }
         return template;
+    }
+
+    private subscribePropValueChanged(mobxModel: IMobxModel, prop: string, htmlProp: string) {
+        const obsProp = mobxModel.observables[ prop ];
+        if ( obsProp ) {
+            obsProp.subscribe( ( value: any ) => {
+                if(!this.rendered) {
+                    return;
+                }
+                console.log( prop, htmlProp,  value );
+                this.propValues[htmlProp] = value;
+
+                this.refresh();
+
+            } )
+        }
     }
 
     private addChild = ( node: Node, template: string, data:any ): Node | null => {
@@ -407,8 +428,8 @@ export abstract class BaseSpaComponent {
     private refresh () {
         const { node, components } = this;
         const model = this.getModel();
-        const h = this.templateToHtmlText(this._template, model);
-        // const h = this.spaRenderer.getHtml( this._template, model );
+        // const h = this.templateToHtmlText(this._template, model);
+        const h = this.spaRenderer.getHtml( this._template, model );
        
         this.updateNodeValue(node, h);
         // node.innerHTML = h;
