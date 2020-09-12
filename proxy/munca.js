@@ -1,5 +1,16 @@
 
 
+var opush = Array.prototype.push;
+
+Array.prototype.push = function() {
+    debugger;
+    console.log(this);
+    opush.apply(this, arguments);
+}
+
+var a = [];
+a.push(3);
+
 
 if (!Object.prototype.watch) {
  Object.defineProperty(
